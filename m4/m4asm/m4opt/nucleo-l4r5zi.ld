@@ -1,0 +1,1 @@
+../../ldscripts/nucleo-l4r5zi.ld

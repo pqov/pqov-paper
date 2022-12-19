@@ -1,0 +1,13 @@
+#ifndef AES4_PUBLICINPUTS_H
+#define AES4_PUBLICINPUTS_H
+
+#include "aes4.h"
+#define aes128_4rounds_ctx_publicinputs aes128_4rounds_ctx
+
+
+#define aes128_ecb_keyexp_publicinputs aes128_ecb_keyexp
+#define aes128_4rounds_ctr_keyexp_publicinputs aes128_4rounds_ctr_keyexp
+#define aes128_4rounds_ctr_publicinputs aes128_4rounds_ctr
+#define aes128_4rounds_ctx_release_publicinputs aes128_4rounds_ctx_release
+
+#endif

@@ -1,0 +1,18 @@
+skip_list = [
+    {'scheme': 'ov-Ip', 'implementation':'ref', 'estmemory': 124124312342},
+    {'scheme': 'ov-Ip-no-blocked-inversion', 'implementation':'ref', 'estmemory': 124124312342},
+    {'scheme': 'ov-Ip-pkc', 'implementation':'ref', 'estmemory': 124124312342},
+    {'scheme': 'ov-Ip-pkc-aes4', 'implementation':'ref', 'estmemory': 124124312342},
+    {'scheme': 'ov-Ip-pkc-skc', 'implementation':'ref', 'estmemory': 124124312342},
+    {'scheme': 'ov-Ip-pkc-skc-aes4', 'implementation':'ref', 'estmemory': 124124312342},
+    {'scheme': 'ov-Is', 'implementation':'ref', 'estmemory': 124124312342},
+    {'scheme': 'ov-Is', 'implementation':'ref-flash', 'estmemory': 124124312342},
+    {'scheme': 'ov-Is-no-blocked-inversion', 'implementation':'ref', 'estmemory': 124124312342},
+    {'scheme': 'ov-Is-no-blocked-inversion', 'implementation':'ref-flash', 'estmemory': 124124312342},
+    {'scheme': 'ov-Is-pkc', 'implementation':'ref', 'estmemory': 124124312342},
+    {'scheme': 'ov-Is-pkc', 'implementation':'ref-flash', 'estmemory': 124124312342},
+    {'scheme': 'ov-Is-pkc-aes4', 'implementation':'ref', 'estmemory': 124124312342},
+    {'scheme': 'ov-Is-pkc-skc', 'implementation':'ref', 'estmemory': 124124312342},
+    {'scheme': 'ov-Is-pkc-skc', 'implementation':'ref-flash', 'estmemory': 124124312342},
+    {'scheme': 'ov-Is-pkc-skc-aes4', 'implementation':'ref', 'estmemory': 124124312342},
+]
