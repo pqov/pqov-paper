@@ -69,6 +69,13 @@ CFLAGS    += -D_MUL_WITH_MULTAB_
 CXXFLAGS  += -D_MUL_WITH_MULTAB_
 endif
 
+ifeq ($(OS), Darwin)
+  ifeq ($(PARAM),3)
+  CFLAGS    += -D_MUL_WITH_MULTAB_
+  CXXFLAGS  += -D_MUL_WITH_MULTAB_
+  endif
+endif
+
 else ifeq ($(PROJ),ssse3)
 
 SRC_EXT_DIRS  = ./src/ref ./src/amd64 ./src/ssse3
@@ -138,7 +145,7 @@ endif
 
 .INTERMEDIATE:  $(OBJ)
 
-EXE= sign_api-test sign_api-benchmark
+EXE= sign_api-test sign_api-benchmark rec-sign-benchmark
 
 ifdef DEBUG
         CFLAGS+=  -D_DEBUG_ -g
