@@ -19,62 +19,11 @@
 #include "utils_hash.h"
 #include "utils_malloc.h"
 
-
-// #define _BACK_SUBSTITUTION_
-
-#if defined(_BLAS_NEON_)
-// 2022/oct/15  (ver:abf2493d)
-// sign on mac M1(4RAES)
-//                BMI       BACK_SUB   UDF_MULTAB
-// (16,160,64) :  130210    207800      144851
-// (256,112,44):   69627     60564       96427
-// (256,184,72):  378720    306433      273023
-// (256,244,96):  455158    415619      271605
-
-// sign on pi4 (4RAES)
-//                  BMI    BACK_SUB    UNDEF_MULTAB
-// (16,160,64) :  570883     764335     725271
-// (256,112,44):  345050     320124     322969
-// (256,184,72): 1654233    1568122    1610359
-// (256,244,96): 3243526    3257337    3019247
-
-  #if 64 == _O
-    //#undef _MUL_WITH_MULTAB_
-  #elif  44 == _O
-    #define  _BACK_SUBSTITUTION_
-    //#ifndef _MUL_WITH_MULTAB_
-    //#define _MUL_WITH_MULTAB_
-    //#endif  //ndef _MUL_WITH_MULTAB_
-  #elif  72 == _O
-    #define  _BACK_SUBSTITUTION_
-    #ifdef   _MUL_WITH_MULTAB_
-    #undef _MUL_WITH_MULTAB_
-    #endif //_MUL_WITH_MULTAB_
-  #elif  96 == _O
-    #define  _BACK_SUBSTITUTION_
-    #ifdef   _MUL_WITH_MULTAB_
-    #undef   _MUL_WITH_MULTAB_
-    #endif //_MUL_WITH_MULTAB_
-  #else
-error --  here
-  #endif
-#elif defined(_BLAS_AVX2_)
-    #define _BACK_SUBSTITUTION_
-#elif defined(_BLAS_M4F_)
 #define _BACK_SUBSTITUTION_
-#endif
-
-
 
 #define MAX_ATTEMPT_VINEGAR  256
 
-
 /////////////////////////////
-
-
-
-#define _MAX_O  _O
-#define _MAX_O_BYTE  _O_BYTE
 
 int ov_sign( uint8_t * signature , const sk_t * sk , const uint8_t * message , unsigned mlen )
 {
@@ -105,9 +54,9 @@ int ov_sign( uint8_t * signature , const sk_t * sk , const uint8_t * message , u
     hash_update(&h_m_salt_secret, message, mlen);
     hash_update(&h_m_salt_secret, salt, _SALT_BYTE);
     hash_ctx_copy(&h_vinegar_copy, &h_m_salt_secret);
-    hash_final_digest( y , _PUB_M_BYTE , &h_m_salt_secret); // H(digest||salt)
+    hash_final_digest( y , _PUB_M_BYTE , &h_m_salt_secret);  // H(M||salt)
 
-    hash_update(&h_vinegar_copy, sk->sk_seed, LEN_SKSEED );
+    hash_update(&h_vinegar_copy, sk->sk_seed, LEN_SKSEED );   // H(M||salt||sk_seed ...
 
     uint8_t ctr = 0;  // counter for generating vinegar
     unsigned n_attempt = 0;
@@ -115,8 +64,8 @@ int ov_sign( uint8_t * signature , const sk_t * sk , const uint8_t * message , u
     while( MAX_ATTEMPT_VINEGAR > n_attempt++  ) {
         hash_ctx h_vinegar;
         hash_ctx_copy(&h_vinegar, &h_vinegar_copy);
-        hash_update(&h_vinegar, &ctr, 1 );        // consist with figure.1 of the ov paper
-        hash_final_digest( vinegar, _V_BYTE , &h_vinegar);  //  H(secret||M||salt||ctr)
+        hash_update(&h_vinegar, &ctr, 1 );                  // H(M||salt||sk_seed||ctr ...
+        hash_final_digest( vinegar, _V_BYTE , &h_vinegar);  // H(M||salt||sk_seed||ctr)
         ctr++;
 #if defined(_BACK_SUBSTITUTION_)
 
@@ -126,17 +75,16 @@ int ov_sign( uint8_t * signature , const sk_t * sk , const uint8_t * message , u
 // matrix
         gfmat_prod_multab( mat_l1 , sk->L , _O*_O_BYTE , _V , multabs );
 // constant
-    // Given vinegars, evaluate P1 with the (secret?) vinegars
+    // Given vinegars, evaluate P1 with the vinegars
         batch_quad_trimat_eval_multab( r_l1_F1, sk->P1, multabs, _V, _O_BYTE );
 #else
 // matrix
         gfmat_prod( mat_l1 , sk->L , _O*_O_BYTE , _V , vinegar );
 // constant
-    // Given vinegars, evaluate P1 with the (secret?) vinegars
+    // Given vinegars, evaluate P1 with the vinegars
         batch_quad_trimat_eval( r_l1_F1, sk->P1, vinegar, _V, _O_BYTE );
 #endif
         gf256v_add( r_l1_F1 , y , _O_BYTE );    // substract the contribution from vinegar variables
-
 
 #if _GFSIZE == 256
         l1_succ = gf256mat_gaussian_elim(mat_l1 , r_l1_F1, _O);
@@ -151,12 +99,12 @@ int ov_sign( uint8_t * signature , const sk_t * sk , const uint8_t * message , u
 #else
 error -- _GFSIZE
 #endif
-	break;
+        break;
     }
+    hash_final_digest( NULL , 0 , &h_vinegar_copy); // free
     if( MAX_ATTEMPT_VINEGAR <= n_attempt ) return -1;
 
 #else // defined(_BACK_SUBSTITUTION_)
-
 
 #if defined(_MUL_WITH_MULTAB_)
         gfv_generate_multabs( multabs , vinegar , _V );
@@ -178,6 +126,7 @@ error -- _GFSIZE
 #endif
 	if( l1_succ ) break;
     }
+    hash_final_digest( NULL , 0 , &h_vinegar_copy); // free
     if( MAX_ATTEMPT_VINEGAR <= n_attempt ) return -1;
 
     // Given vinegars, evaluate P1 with the (secret?) vinegars
@@ -204,11 +153,10 @@ error -- _GFSIZE
 #endif
     } while(0);
 
-
 #endif // defined(_BACK_SUBSTITUTION_)
 
     //  w = T^-1 * x
-    uint8_t w[_PUB_N_BYTE];
+    uint8_t * w = signature;   // [_PUB_N_BYTE];
     // identity part of T.
     memcpy( w , vinegar , _V_BYTE );
     memcpy( w + _V_BYTE , x_o1 , _O_BYTE );
@@ -217,13 +165,9 @@ error -- _GFSIZE
     gfmat_prod(y, sk->t1, _V_BYTE , _O , x_o1 );
     gf256v_add(w, y, _V_BYTE );
 
-    // return: copy w and salt to the signature.
-    memset( signature , 0 , OV_SIGNATUREBYTES );  // set the output 0
-    gf256v_add( signature , w , _PUB_N_BYTE );
-    gf256v_add( signature + _PUB_N_BYTE , salt , _SALT_BYTE );
+    // return: signature <- w || salt.
+    memcpy( signature + _PUB_N_BYTE , salt , _SALT_BYTE );
 
-    
-    hash_final_digest( NULL , 0 , &h_vinegar_copy); // free
     return 0;
 }
 
