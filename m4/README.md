@@ -1,6 +1,7 @@
 This directory contains the implementation targeting the Arm Cortex-M4. 
 In particular, we target the [NUCLEO-L4R5ZI board](https://www.st.com/en/evaluation-tools/nucleo-l4r5zi.html) featuring 2MB of Flash and 640KB of RAM.
 
+Our benchmarking setup is an adapted version of the [pqm4 framework](https://github.com/mupq/pqm4). 
 
 ## Cloning
 Clone this repository with submodules recursively
@@ -39,16 +40,16 @@ Core arithmetic is in the assembly files in [m4asm](./m4asm) which is then symli
 Implementation directories is available in [crypto_sign](./crypto_sign).
 
 The core differences to the pqm4 framework are
- - Added support for writing to flash memory in [hal-flash.h](./common/hal-flash.h) and [hal-flash.c](./common/hal-flash.c). This is used for all parameter sets for which the key does not fit in RAM. Implementations are then called `m4f-flash` or `m4f-flash-speed`.
- - Added round-reduced AES for sampling the OV public key. The implementation is based on the [implementation by Stoffelen and Schwabe](https://github.com/Ko-/aes-armcortexm). Our adapted implementation is in [aes4-publicinputs.h](./common/aes4-publicinputs.h), [aes4-publicinputs.c](./common/aes4-publicinputs.c), and [aes4-publicinputs.S](./common/aes4-publicinputs.S).
+ - Added support for writing to flash memory in [hal-flash.h](./pqm4/common/hal-flash.h) and [hal-flash.c](./pqm4/common/hal-flash.c). This is used for all parameter sets for which the key does not fit in RAM. Implementations are then called `m4f-flash` or `m4f-flash-speed`.
+ - Added round-reduced AES for sampling the OV public key. The implementation is based on the [implementation by Stoffelen and Schwabe](https://github.com/Ko-/aes-armcortexm). Our adapted implementation is in [aes4-publicinputs.h](./pqm4/common/aes4-publicinputs.h), [aes4-publicinputs.c](./pqm4/common/aes4-publicinputs.c), and [aes4-publicinputs.S](./pqm4/common/aes4-publicinputs.S).
 
 To get an overview about the core differences between the reference implementation and the optimized implementation, have a look at [blas_matrix_m4f.c](./crypto_sign/ov-Ip/m4f/blas_matrix_m4f.c) and [ov_publicmap_m4f.c](./crypto_sign/ov-Ip/m4f/ov_publicmap_m4f.c).
 
 ## Using this repository
 
-This repository works in a similar way as pqm4 via the [`test.py`](./test.py), [`testvectors.py`](./testvectors.py), and [`benchmark.py`](./benchmarks.py) scripts.
+This repository works in a similar way as pqm4 via the [`test.py`](./pqm4/test.py), [`testvectors.py`](./pqm4/testvectors.py), and [`benchmark.py`](./pqm4/benchmarks.py) scripts.
 
-To run functional tests, you can use the [`test.py`](./test.py) script:
+To run functional tests, you can use the [`test.py`](./pqm4/test.py) script:
 ```
     # to test all implementations of all parameter sets
     ./test.py -p nucleo-l4r5zi -u /dev/ttyACM0
@@ -58,7 +59,7 @@ To run functional tests, you can use the [`test.py`](./test.py) script:
     ./test.py -p nucleo-l4r5zi -u /dev/ttyACM0 ov-Ip ov-Is
 ```
 
-To ensure that testvectors are matching between the reference implementation and the optimized implementation, you can use the [`testvectors.py`](./testvectors.py) script:
+To ensure that testvectors are matching between the reference implementation and the optimized implementation, you can use the [`testvectors.py`](./pqm4/testvectors.py) script:
 ```
     # to check all implementations of all parameter sets
     ./testvectors.py -p nucleo-l4r5zi -u /dev/ttyACM0
@@ -68,7 +69,7 @@ To ensure that testvectors are matching between the reference implementation and
     ./testvectors.py -p nucleo-l4r5zi -u /dev/ttyACM0 ov-Ip ov-Is
 ```
 
-For benchmarking, there is the [`benchmarks.py`](./benchmarks.py) script. 
+For benchmarking, there is the [`benchmarks.py`](./pqm4/benchmarks.py) script. 
 It comes with additional arguments:
  - `-i` : number of iterations for signing and verification (key generation is only run once as it is slower and does not have much runtime variation)
  - `--nostack`: skip the stack benchmarks
@@ -84,7 +85,7 @@ It comes with additional arguments:
     ./benchmarks.py -p nucleo-l4r5zi -u /dev/ttyACM0 -i 10000 ov-Ip ov-Is
 ```
 
-To convert the benchmarking results (stored in plaintext in `benchmarks/`), you can use the [`convert_benchmarks.py`](./convert_benchmarks.py) script:
+To convert the benchmarking results (stored in plaintext in `benchmarks/`), you can use the [`convert_benchmarks.py`](./pqm4/convert_benchmarks.py) script:
 ```
     # markdown format
     ./convert_benchmarks.py md
@@ -94,7 +95,7 @@ To convert the benchmarking results (stored in plaintext in `benchmarks/`), you 
 ```
 
 
-Performing the 10000 benchmarks for the paper has been done with the following commands:
+Experiments for the paper have been done with the following commands:
 ```
 #!/bin/bash
 
