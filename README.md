@@ -12,3 +12,8 @@ Authors:
  
  
 **Warning: This is the version of the code accompanying the paper. This is not the NIST submission! Parameters and implementations may still change for the NIST submission. Official reference code will be posted separately.**
+
+# License
+
+Our implementations of OV are released under the conditions of [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
+Third party code may have other licenses which is stated at the top of each file or in the respective LICENSE files.
