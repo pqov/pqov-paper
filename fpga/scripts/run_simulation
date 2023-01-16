@@ -1,0 +1,15 @@
+#!/bin/bash
+
+GF_BIT=8
+OP_SIZE=22
+N=16
+O=44
+V=68
+LL=$(python -c "from math import ceil; print(int(ceil(float($O)/float($N)))*($N))")
+V_=$(python -c "from math import ceil; print(int(ceil(float($V)/float($N))))")
+O_=$(python -c "from math import ceil; print(int(ceil(float($O)/float($N))))")
+KK=$(python -c "from math import ceil; print(2*($LL))")
+MODE="classic"
+AES_ROUND=10
+
+make -e GF_BIT=$((GF_BIT)) OP_SIZE=$((OP_SIZE)) V=$V O=$O V_=$V_ O_=$O_ N=$N L=$LL L_ORI=$O K=$KK testbench

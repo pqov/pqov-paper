@@ -1,0 +1,3 @@
+#!/bin/bash
+
+csh -c "source /usr/cad/synopsys/CIC/vcs.cshrc && source /usr/cad/cadence/CIC/incisiv.cshrc && /usr/cad/synopsys/CIC/verdi.cshrc && ./scripts/run_simulation"

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+GF_BIT=8
+OP_SIZE=22
+N=16
+O=44
+V=68
+LL=$(python -c "from math import ceil; print(int(ceil(float($O)/float($N)))*($N))")
+V_=$(python -c "from math import ceil; print(int(ceil(float($V)/float($N))))")
+O_=$(python -c "from math import ceil; print(int(ceil(float($O)/float($N))))")
+KK=$(python -c "from math import ceil; print(2*($LL))")
+MODE="classic"
+AES_ROUND=10
+
+ENV_FOLDER="test_files_gauss-10round-aes_SL1-p_classic_cfg"
+mkdir -p $ENV_FOLDER/rtl/ && cp -r onboard/* host/ test.data $ENV_FOLDER/
+rm -rf $ENV_FOLDER/uovsystem/
+cp ./rtl/*.v ./rtl/sha3/*.v ./rtl/aes_ctr_rng/rtl/*.v ./rtl/utils/rtl/*.v $ENV_FOLDER/rtl/
+cd $ENV_FOLDER/
+vivado -mode batch -source generate_system.zedboard.tcl

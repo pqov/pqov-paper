@@ -1,0 +1,39 @@
+`ifndef SHA3_CONSTANT
+`define SHA3_CONSTANT
+
+`define SHAMODE_SHA3_224 (3'd0)
+`define SHAMODE_SHA3_256 (3'd1)
+`define SHAMODE_SHA3_384 (3'd2)
+`define SHAMODE_SHA3_512 (3'd3)
+`define SHAMODE_SHAKE_128 (3'd4)
+`define SHAMODE_SHAKE_256 (3'd5)
+`define SHAMODE_INVALID0 (3'd6)
+`define SHAMODE_INVALID1 (3'd7)
+
+`define ASMODE_ABSORB (1'b0)
+`define ASMODE_SQUEEZE (1'b1)
+
+`define BLKBYTES_SHA3_224 ('d1152)
+`define BLKBYTES_SHA3_256 ('d1088)
+`define BLKBYTES_SHA3_384 ('d832)
+`define BLKBYTES_SHA3_512 ('d576)
+`define BLKBYTES_SHAKE_128 ('d1344)
+`define BLKBYTES_SHAKE_256 ('d1088)
+
+// All of them are one minus
+`define BLKCOUNT_SHA3_224 ('d35)
+`define BLKCOUNT_SHA3_256 ('d33)
+`define BLKCOUNT_SHA3_384 ('d25)
+`define BLKCOUNT_SHA3_512 ('d17)
+`define BLKCOUNT_SHAKE_128 ('d41)
+`define BLKCOUNT_SHAKE_256 ('d33)
+
+`define DGSTSIZE_SHA3_224 ('d224)
+`define DGSTSIZE_SHA3_256 ('d256)
+`define DGSTSIZE_SHA3_384 ('d384)
+`define DGSTSIZE_SHA3_512 ('d512)
+`define DGSTSIZE_SHAKE_128 ('d32767)
+`define DGSTSIZE_SHAKE_256 ('d32767)
+
+`endif
+
