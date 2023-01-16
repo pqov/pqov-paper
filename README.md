@@ -1,5 +1,6 @@
 This repository contains the code accompanying the paper **Oil and Vinegar: Modern Parameters and
 Implementations** which is available TODO: HERE
+This repository contains OV implementations targeting x86 (with AVX2), Armv8 (with Neon), Arm Cortex-M4, and FPGA. 
 
 Authors: 
  - Ward Beullens
@@ -13,15 +14,7 @@ Authors:
  
 **Warning: This is the version of the code accompanying the paper. This is not the NIST submission! Parameters and implementations may still change for the NIST submission. Official reference code will be posted separately.**
 
-# License
-
-Our implementations of OV are released under the conditions of [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
-Third party code may have other licenses which is stated at the top of each file or in the respective LICENSE files.
-
-
-# Contents for x86 and armv8
-
-## Supporting Parameters
+# Parameters 
 
 | Parameter    | signature size | pk size  | sk size | pkc size | compressed-sk size |  
 |:-----------: |:--------------:|--------- |---------|------------|--------------------|
@@ -29,6 +22,14 @@ Third party code may have other licenses which is stated at the top of each file
 |GF(256),112,44| 128            |278,432   |237,912  |43,576      | 48                 |
 |GF(256),184,72| 200            |1,225,440 |1,044,336|189,232     | 48                 |
 |GF(256),244,96| 260            |2,869,440 |2,436,720|446,992     | 48                 |
+
+# Cortex-M4 
+For the Cortex-M4 implementations, see [m4/README.md](./m4/README.md)
+
+# FPGA
+For the FPGA implementations, see [fpga/README.md](./fpga/README.md)
+
+# x86 (AVX2) and Armv8 (Neon)
 
 ## Contents
 
@@ -171,3 +172,9 @@ the makefile will define **_MAC_OS\_** macro for enabling some optimization sett
 2. Choose the algorithm of calculating inversion matrix with block matrix compution:  
   (a) Define the **_LDU_DECOMPOSE\_** macro in **src/parms.h**.  
   (b) Remove the **_BACK_SUBSTITUTION\_** macro in **src/ov.c**.  
+
+
+# License
+
+Our implementations of OV are released under the conditions of [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
+Third party code may have other licenses which is stated at the top of each file or in the respective LICENSE files.
