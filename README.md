@@ -1,5 +1,6 @@
 This repository contains the code accompanying the paper **Oil and Vinegar: Modern Parameters and
-Implementations** which is available TODO: HERE
+Implementations** which is available [here](https://eprint.iacr.org/2023/059).
+
 This repository contains OV implementations targeting x86 (with AVX2), Armv8 (with Neon), Arm Cortex-M4, and FPGA. 
 
 Authors: 
