@@ -22,7 +22,7 @@
 //struct benchmark bmm;
 
 
-int main()
+int main(int argc, char** argv)
 {
 //	bm_init( &bmm );
 
@@ -161,6 +161,8 @@ int main()
 	else printf("PASS\n\n");
 
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

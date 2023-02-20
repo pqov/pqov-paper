@@ -372,7 +372,7 @@ void test_5()
 #include "stdio.h"
 #include "stdlib.h"
 
-int main()
+int main(int argc, char** argv)
 {
 	struct benchmark bm1,bm2,bm3, bm4,bm5;
 	bm_init(&bm1);
@@ -420,6 +420,8 @@ BENCHMARK( bm5 , {
 	printf("gen16 2: %s\n\n", msg );
 
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

@@ -27,7 +27,7 @@
 #define MAX_LEN  96
 #define TEST_RUN 100
 
-int main()
+int main(int argc, char** argv)
 {
 	struct benchmark bmm;
 	bm_init( &bmm );
@@ -94,6 +94,8 @@ BENCHMARK( bmm, {
 	printf((fail)? "TEST FAIL.!\n" : "test PASS.\n" );
 
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

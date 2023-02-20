@@ -21,7 +21,7 @@
 #include "benchmark.h"
 
 
-int main()
+int main(int argc, char** argv)
 {
 	struct benchmark bm1;
 	struct benchmark bm2;
@@ -130,6 +130,8 @@ BENCHMARK( bm2, {
 	bm_dump( msg , 256 , &bm2 );
 	printf("bm2 (gf256_inv()+...): %s\n\n", msg );
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

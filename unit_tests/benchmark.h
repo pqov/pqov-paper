@@ -62,7 +62,7 @@ struct benchmark {
 
 #if !defined(CONFIG_BENCH_SYSTIME)
 #if defined(__aarch64__)
-static inline uint64_t rdtsc() {
+static inline uint64_t rdtsc(void) {
   uint64_t val;
 #if defined(_MAC_OS_)
   #if defined(_M1CYCLES_)
@@ -81,7 +81,7 @@ static inline uint64_t rdtsc() {
 }
 #else
 /* Copied from http://en.wikipedia.org/wiki/RDTSC */
-static inline uint64_t rdtsc() {
+static inline uint64_t rdtsc(void) {
 	uint32_t lo, hi;
 	/* We cannot use "=A", since this would use %rax on x86_64 */
 	__asm__ __volatile__ ("rdtsc" : "=a" (lo), "=d" (hi));

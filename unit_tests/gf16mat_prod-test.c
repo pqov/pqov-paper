@@ -33,7 +33,7 @@ struct benchmark bmm;
 
 #define TEST_RUN 100
 
-int main()
+int main(int argc, char** argv)
 {
 	bm_init( &bmm );
 
@@ -93,6 +93,8 @@ BENCHMARK( bmm, {
 	bm_dump(msg,256,&bmm);
 	puts(msg);
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

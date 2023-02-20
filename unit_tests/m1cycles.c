@@ -89,7 +89,7 @@ static void configure_rdtsc()
     }
 }
 
-static void init_rdtsc()
+static void init_rdtsc(void)
 {
     void *kperf = dlopen(
         "/System/Library/PrivateFrameworks/kperf.framework/Versions/A/kperf",

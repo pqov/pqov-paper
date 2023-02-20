@@ -59,7 +59,7 @@ void gf16mat_identity( uint8_t *mat , unsigned w )
 
 
 
-int main()
+int main(int argc, char** argv)
 {
 	struct benchmark bm_inv;
 	struct benchmark bm_ldu;
@@ -199,6 +199,8 @@ BENCHMARK( bm_ldu , {
 	bm_dump( msg , 256 , & bm_ldu );
 	printf("bm_ldu: %s\n\n", msg );
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

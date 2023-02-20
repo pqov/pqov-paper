@@ -188,12 +188,15 @@ static int test_prng_skip_publicinputs(void)
 
 
 
-int main(void)
+int main(int argc, char** argv)
 {
     int rc = 0;
     rc |= test_prng_gen_publicinputs();
     rc |= test_prng_gen_publicinputs_openssl();
     rc |= test_prng_skip_publicinputs();
     if(!rc) printf("ALL GOOD\n");
+
+    (void)argc;
+    (void)argv;
     return 0;
 }

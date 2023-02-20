@@ -138,7 +138,7 @@ static int test_wrong_pk(void)
     return 0;
 }
 
-int main(void)
+int main(int argc, char** argv)
 {
 
     // marker for automated testing
@@ -146,5 +146,7 @@ int main(void)
     test_sign();
     test_wrong_pk();
     puts("#");
+    (void)argc;
+    (void)argv;
     return 0;
 }

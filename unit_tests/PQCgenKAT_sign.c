@@ -27,7 +27,7 @@ void	fprintBstr(FILE *fp, char *S, unsigned char *A, unsigned long long L);
 char    AlgName[] = "My Alg Name";
 
 int
-main()
+main(int argc, char** argv)
 {
     char                fn_req[32], fn_rsp[32];
     FILE                *fp_req, *fp_rsp;
@@ -154,6 +154,9 @@ main()
     
     fclose(fp_req);
     fclose(fp_rsp);
+
+    (void)argc;
+    (void)argv;
 
     return KAT_SUCCESS;
 }

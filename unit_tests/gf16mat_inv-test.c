@@ -26,7 +26,7 @@ struct benchmark bmm;
 #define LEN  16
 #define TEST_RUN 100
 
-int main()
+int main(int argc, char** argv)
 {
 	bm_init( &bmm );
 
@@ -89,6 +89,8 @@ BENCHMARK( bmm , {
 	bm_dump( msg , 256 , &bmm );
 	printf("bm: %s\n\n", msg );
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

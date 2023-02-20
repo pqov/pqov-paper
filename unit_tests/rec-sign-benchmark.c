@@ -16,7 +16,7 @@ uint64_t rec_keygen[TEST_GENKEY];
 uint64_t rec_sign[TEST_RUN];
 uint64_t rec_open[TEST_RUN];
 
-int main()
+int main(int argc, char** argv)
 {
 #if defined(_MAC_OS_)&&defined(_M1CYCLES_)
 	// rdtsc() in m1cycles.c needs initialization.
@@ -81,6 +81,8 @@ rec_open[i] = t2-t1;
 	free( pk );
 	free( sk );
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

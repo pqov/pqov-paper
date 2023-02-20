@@ -77,7 +77,7 @@ int test_hash_update()
 }
 
 
-int main()
+int main(int argc, char** argv)
 {
 
   test_hash_update();
@@ -86,5 +86,7 @@ int main()
   uint8_t mesg[17] = "0123456789abcdef";
   test_ctx_copy(mesg,16);
 
+  (void)argc;
+  (void)argv;
   return 0;
 }

@@ -58,7 +58,7 @@ void gf256mat_identity( uint8_t *mat , unsigned w )
 
 
 
-int main()
+int main(int argc, char** argv)
 {
 	struct benchmark bm0, bm1;
 	bm_init( &bm0 );
@@ -188,6 +188,8 @@ BENCHMARK( bm1 , {
 	printf("mat inv with LDU decomp: %s\n", msg );
 	printf("\n\n");
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

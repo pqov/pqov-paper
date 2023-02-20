@@ -23,12 +23,12 @@ uint8_t c0[128];
 uint8_t c1[128];
 
 
-void test_1_0()
+void test_1_0(void)
 {
   gf16v_generate_multabs_neon( (uint8_t *)multabs, b , 32 );
 }
 
-void test_1_3()
+void test_1_3(void)
 {
   // gf16 32x32 normal mul
   uint8x16_t r = vdupq_n_u8(0);
@@ -40,7 +40,7 @@ void test_1_3()
   vst1q_u8( c0 , r );
 }
 
-void test_1_1()
+void test_1_1(void)
 {
   // gf16 32x32 mat-vec with multab
   uint8x16_t mask_f = vdupq_n_u8(0xf);
@@ -52,7 +52,7 @@ void test_1_1()
   vst1q_u8( c0 , r );
 }
 
-void test_1_2()
+void test_1_2(void)
 {
   // gf16 32x32 mat-vec laze reduce
   uint8x16_t mask_f = vdupq_n_u8(0xf);
@@ -73,12 +73,12 @@ void test_1_2()
 }
 
 
-void test_2_0()
+void test_2_0(void)
 {
   gf16v_generate_multabs_neon( (uint8_t *)multabs, b , 64 );
 }
 
-void test_2_3()
+void test_2_3(void)
 {
   // gf16 64x64 normal mul
   uint8x16_t r0 = vdupq_n_u8(0);
@@ -95,7 +95,7 @@ void test_2_3()
 }
 
 
-void test_2_1()
+void test_2_1(void)
 {
   // gf16 64x64 mat-vec with multab
   uint8x16_t mask_f = vdupq_n_u8(0xf);
@@ -110,7 +110,7 @@ void test_2_1()
   vst1q_u8( c0+16 , r1 );
 }
 
-void test_2_2()
+void test_2_2(void)
 {
   // gf16 64x64 mat-vec lazy reduce
   uint8x16_t mask_f = vdupq_n_u8(0xf);
@@ -142,12 +142,12 @@ void test_2_2()
 
 #define BLOCKLEN16  3
 
-void test_7_0()
+void test_7_0(void)
 {
   gf16v_generate_multabs_neon( (uint8_t *)multabs, b , BLOCKLEN16*32 );
 }
 
-void test_7_1()
+void test_7_1(void)
 {
   // gf16 BLOCKLEN16*16 x BLOCKLEN16*16 mat-vec with multab
     uint8x16_t mask_f = vdupq_n_u8( 0xf );
@@ -164,7 +164,7 @@ void test_7_1()
     for( int j=0;j<BLOCKLEN16; j++) { vst1q_u8( c0+j*16 , r[j] ); }
 }
 
-void test_7_3()
+void test_7_3(void)
 {
   // gf16 BLOCKLEN16*16 x BLOCKLEN16*16 mat-vec with multab
   uint8x16_t r[BLOCKLEN16];
@@ -184,7 +184,7 @@ void test_7_3()
   for( int j=0;j<BLOCKLEN16; j++) { vst1q_u8( c0+j*16 , r[j] ); }
 }
 
-void test_7_2()
+void test_7_2(void)
 {
   uint8x16_t mask_f = vdupq_n_u8(0xf);
   uint8x16_t mask_3 = vdupq_n_u8(3);
@@ -222,12 +222,12 @@ void test_7_2()
 
 
 
-void test_3_0()
+void test_3_0(void)
 {
   gf256v_generate_multabs_neon( (uint8_t *)multabs, b , 32 );
 }
 
-void test_3_1()
+void test_3_1(void)
 {
   // gf256 32x32 mat-vec with multab
     uint8x16_t mask_f = vdupq_n_u8( 0xf );
@@ -246,7 +246,7 @@ void test_3_1()
     vst1q_u8(c0+16 , r1);
 }
 
-void test_3_2()
+void test_3_2(void)
 {
   // gf256 32x32 mat-vec lazy reduce
   uint8x16_t r0l = vdupq_n_u8(0);
@@ -275,12 +275,12 @@ void test_3_2()
 
 
 
-void test_4_0()
+void test_4_0(void)
 {
   gf256v_generate_multabs_neon( (uint8_t *)multabs, b , 64 );
 }
 
-void test_4_3()
+void test_4_3(void)
 {
   // gf256 BLOCKLEN*16 x BLOCKLEN*16 mat-vec with multab
     uint8x16_t r[4];
@@ -296,7 +296,7 @@ void test_4_3()
 }
 
 
-void test_4_1()
+void test_4_1(void)
 {
   // gf256 64x64 mat-vec with multab
     uint8x16_t mask_f = vdupq_n_u8( 0xf );
@@ -324,7 +324,7 @@ void test_4_1()
     vst1q_u8(c0+48 , r3);
 }
 
-void test_4_2()
+void test_4_2(void)
 {
   // gf256 64x64 mat-vec lazy reduce
   uint8x16_t r0l = vdupq_n_u8(0);
@@ -364,12 +364,12 @@ void test_4_2()
 }
 
 
-void test_5_0()
+void test_5_0(void)
 {
   gf256v_generate_multabs_neon( (uint8_t *)multabs, b , 96 );
 }
 
-void test_5_3()
+void test_5_3(void)
 {
   // gf256 BLOCKLEN*16 x BLOCKLEN*16 mat-vec with multab
     uint8x16_t r[6];
@@ -385,7 +385,7 @@ void test_5_3()
 }
 
 
-void test_5_1()
+void test_5_1(void)
 {
   // gf256 96x96 mat-vec with multab
     uint8x16_t mask_f = vdupq_n_u8( 0xf );
@@ -422,7 +422,7 @@ void test_5_1()
     vst1q_u8(c0+80 , r5);
 }
 
-void test_5_2()
+void test_5_2(void)
 {
   // gf256 96x96 mat-vec lazy reduce
   uint8x16_t r0l = vdupq_n_u8(0);
@@ -493,12 +493,12 @@ void test_5_2()
 
 #define BLOCKLEN  3
 
-void test_6_0()
+void test_6_0(void)
 {
   gf256v_generate_multabs_neon( (uint8_t *)multabs, b , BLOCKLEN*16 );
 }
 
-void test_6_3()
+void test_6_3(void)
 {
   // gf256 BLOCKLEN*16 x BLOCKLEN*16 mat-vec with multab
     uint8x16_t r[BLOCKLEN];
@@ -513,7 +513,7 @@ void test_6_3()
     for( int j=0;j<BLOCKLEN; j++) { vst1q_u8( c0+j*16 , r[j] ); }
 }
 
-void test_6_1()
+void test_6_1(void)
 {
   // gf256 BLOCKLEN*16 x BLOCKLEN*16 mat-vec with multab
     uint8x16_t mask_f = vdupq_n_u8( 0xf );
@@ -532,7 +532,7 @@ void test_6_1()
     for( int j=0;j<BLOCKLEN; j++) { vst1q_u8( c0+j*16 , r[j] ); }
 }
 
-void test_6_2()
+void test_6_2(void)
 {
   // gf256 BLOCKLEN*16 x BLOCKLEN*16 mat-vec lazy reduce
     uint8x16_t r0[BLOCKLEN*2];
@@ -569,7 +569,7 @@ void test_6_2()
 #include "stdlib.h"
 
 
-int main()
+int main(int argc, char** argv)
 {
 	for(int i=128-1;i>=0;i--)     b[i]=rand();
 	for(int i=128*128-1;i>=0;i--) mat[i]=rand();
@@ -652,6 +652,8 @@ BENCHMARK( bm6 , {
 	bm_dump(msg,256,&bm6);
 	printf("bm6: %s\n\n", msg );
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 
