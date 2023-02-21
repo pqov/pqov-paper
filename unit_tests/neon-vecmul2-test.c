@@ -61,7 +61,7 @@ void test_pmul( uint8_t * c , const uint8_t * a , uint8_t bb , unsigned w )
 
 
 
-int main()
+int main(int argc, char** argv)
 {
 	for(unsigned i=0;i<sizeof(b);i++)   b[i]=rand();
 	for(unsigned i=0;i<sizeof(a0);i++) a0[i]=rand();
@@ -109,7 +109,8 @@ BENCHMARK( bm2 , {
   if( ! is_vec_eq( c0 , c1 , ww[j]*16 ) )  { printf("vec neq!!\n"); return -1; }
 
   }
-
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

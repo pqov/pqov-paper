@@ -12,7 +12,7 @@
 #define TEST_RUN 500
 
 
-int main()
+int main(int argc, char** argv)
 {
 	printf("%s\n", OV_ALGNAME );
 	printf("sk size: %d\n", CRYPTO_SECRETKEYBYTES );
@@ -57,6 +57,8 @@ int main()
 	free( sk );
 	printf("all (%d,%d) tests passed.\n\n", TEST_RUN , TEST_GENKEY );
 
+    (void)argv;
+    (void)argc;
 	return 0;
 }
 

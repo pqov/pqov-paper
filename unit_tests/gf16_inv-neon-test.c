@@ -42,7 +42,7 @@ uint8_t gf256_mul_neon( uint8_t a , uint8_t b )
 }
 
 
-int main()
+int main(int argc char** argv)
 {
 	struct benchmark bm1;
 	struct benchmark bm2;
@@ -138,6 +138,8 @@ for(int j=0;j<1000;j++)
 	bm_dump( msg, 256 , &bm3 );
 	printf("gf16v mul neon: %s\n", msg );
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

@@ -12,7 +12,7 @@
 #define TEST_RUN 500
 
 
-int main()
+int main(int argc, char** argv)
 {
 	struct benchmark bm1,bm2,bm3;
 	bm_init(&bm1);
@@ -80,6 +80,8 @@ BENCHMARK(bm3,{
 	free( pk );
 	free( sk );
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

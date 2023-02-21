@@ -40,7 +40,7 @@ void gf256mat_transpose( uint8_t * mat , unsigned len )
 //#define _ROW_MAJOR_MATRIX_
 
 
-int main()
+int main(int argc, char** argv)
 {
 //	bm_init( &bmm );
 
@@ -131,6 +131,8 @@ for(int j=0;j<TEST_INV;j++) {
 	if(test_pass) printf( "test pass [%dx%d].\n\n", TEST_INV , TEST_RUN);
 	else printf("test FAIL.\n\n");
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

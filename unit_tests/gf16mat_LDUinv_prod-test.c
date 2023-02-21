@@ -36,7 +36,7 @@ int is_vec_eq( const uint8_t *v0 , const uint8_t *v1, int len )
 
 
 
-int main()
+int main(int argc, char** argv)
 {
 	struct benchmark bm_0, bm_0_0, bm_0_1;
 	struct benchmark bm_1, bm_1_0, bm_1_1;
@@ -187,6 +187,8 @@ bm_stop(&bm_2_1);
 	bm_dump( msg , 256 , & bm_2_0 );  printf("  mat: %s\n\n", msg );
 	bm_dump( msg , 256 , & bm_2_1 );  printf("  vec: %s\n\n", msg );
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

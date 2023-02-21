@@ -67,7 +67,7 @@ void test_pmul( uint8_t * c , const uint8_t * a, uint8_t bb , unsigned w )
 
 
 
-int main()
+int main(int argc, char** argv)
 {
 	for(unsigned i=0;i<sizeof(b);i++)   b[i]=rand();
 	for(unsigned i=0;i<sizeof(a0);i++) a0[i]=rand();
@@ -118,6 +118,8 @@ BENCHMARK( bm2 , {
 
   }
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

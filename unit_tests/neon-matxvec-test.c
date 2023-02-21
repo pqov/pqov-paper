@@ -307,7 +307,7 @@ int is_vec_eq(const uint8_t *v0, const uint8_t *v1, int len )
 #include "stdlib.h"
 
 
-int main()
+int main(int argc, char** argv)
 {
 	for(int i=128-1;i>=0;i--)     b[i]=rand();
 	for(int i=128*128-1;i>=0;i--) mat[i]=rand();
@@ -351,6 +351,8 @@ BENCHMARK( bm3 , {
 
   }
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

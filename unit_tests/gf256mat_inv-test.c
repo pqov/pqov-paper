@@ -94,7 +94,7 @@ BENCHMARK( bm0 , {
 
 
 
-int main()
+int main(int argc, char** argv)
 {
 //	struct benchmark bm0, bm1;
 //	bm_init( &bm0 );
@@ -122,7 +122,8 @@ int main()
     for(unsigned i=0;i<sizeof(lens)/sizeof(unsigned);i++) if( !test( matC , matB , matA , lens[i] , prng0 ) ) break;
 
 
-
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 

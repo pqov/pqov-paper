@@ -27,7 +27,7 @@
 #include "blas_comm.h"
 #endif
 
-int main()
+int main(int argc, char** argv)
 {
 #if defined(_BENCHMARK_INV_)
 	struct benchmark bm0, bm1;
@@ -187,6 +187,8 @@ BENCHMARK( bm1 , {
 	else printf("PASS\n\n");
 
 
+    (void)argc;
+    (void)argv;
 	return 0;
 }
 
