@@ -32,22 +32,10 @@ void randombytes(unsigned char *x, unsigned long long xlen)
 #endif
 
 
-////////////////////////////////// crypto_stream_aes256ctr //////////////////////////////
 
 
 //
-//#if defined(_UTILS_SUPERCOP_)
-//
-//#include "crypto_stream_aes256ctr.h"
-//
-// crypto_stream_aes256ctr(unsigned char *x,unsigned xlen, const unsigned char *nonce, const unsigned char *key)
-//#define aes256ctr  crypto_stream_aes256ctr
-//#error "needs to be implemented"
-//
-
-
-//
-// Defining prng_set(), prng_set_publicinputs(), aes256ctr(), and aes256ctr_publicinputs()
+// Defining prng_set(), prng_set_publicinputs(), aes128ctr(), and aes128ctr_publicinputs()
 //
 //
 #if defined(_UTILS_PQM4_)
@@ -144,7 +132,6 @@ int aes128ctr_publicinputs( unsigned char *out, unsigned nblocks, const unsigned
 
 #elif defined(_UTILS_NEONAES_)
 
-#define aes128ctr_publicinputs   aes256ctr_publicinputs
 
 
 #include "aes128_4r_ffs.h"
@@ -180,64 +167,6 @@ int aes128ctr_publicinputs( unsigned char *out, unsigned nblocks, const unsigned
     }
     return 0;
 }
-
-#elif defined(_UTILS_OPENSSL_)&&(!defined(_4ROUND_AES_))
-
-int prng_set_publicinputs(prng_publicinputs_t *ctx, const unsigned char prng_seed[16])
-{
-    memcpy(ctx->key, prng_seed, AES128CTR_KEYLEN );
-    ctx->used = RNG_OUTPUTLEN;
-    ctx->ctr = 0;
-    return 0;
-}
-
-#ifdef _4ROUND_AES_
-
-error -- Openssl does not support 4RAES.
-
-#endif
-
-
-#include <openssl/evp.h>
-
-static inline uint32_t br_swap32(uint32_t x)
-{
-	x = ((x & (uint32_t)0x00FF00FF) << 8)
-		| ((x >> 8) & (uint32_t)0x00FF00FF);
-	return (x << 16) | (x >> 16);
-}
-
-
-static
-int aes128ctr_publicinputs( unsigned char *out, unsigned nblocks, const unsigned char *n, uint32_t ctr, const prng_publicinputs_t *ctx)
-{
-  uint32_t ivw[4];
-  memcpy( (uint8_t*)ivw , n, AES128CTR_NONCELEN );
-  uint32_t cc = ctr + br_swap32(ivw[3]); // be->le and then += ctr
-  ivw[3] = br_swap32(cc);
-
-  uint8_t in[RNG_OUTPUTLEN] = {0};
-  unsigned inlen = RNG_OUTPUTLEN;
-
-  EVP_CIPHER_CTX *cctx;
-  int ok;
-  int outl;
-
-  cctx = EVP_CIPHER_CTX_new();
-  if (!cctx) return -111;
-
-  ok = EVP_EncryptInit_ex(cctx,EVP_aes_128_ctr(),NULL,ctx->key,(uint8_t *)ivw);
-  if (ok == 1) ok = EVP_CIPHER_CTX_set_padding(cctx, 0);
-  while( nblocks-- ) {
-    if (ok == 1) ok = EVP_EncryptUpdate(cctx, out, &outl, in, inlen);
-    else break;
-    out += inlen;
-  }
-  if (ok == 1) ok = EVP_EncryptFinal_ex(cctx, out, &outl);
-  EVP_CIPHER_CTX_cleanup(cctx);
-  return ok == 1 ? 0 : -111;
-}
-
 
 
 
@@ -337,14 +266,14 @@ int prng_gen_publicinputs(prng_publicinputs_t *ctx, unsigned char *out, unsigned
   if(xlen >= RNG_OUTPUTLEN){
     uint32_t nblocks = xlen / RNG_OUTPUTLEN;
     aes128ctr_publicinputs(out, nblocks, nonce, ctx->ctr, ctx);
-    ctx->ctr += (RNG_OUTPUTLEN/AES256_BLOCKSIZE)*nblocks;
+    ctx->ctr += (RNG_OUTPUTLEN/AES128_BLOCKSIZE)*nblocks;
     xlen -= nblocks * RNG_OUTPUTLEN;
     out += nblocks * RNG_OUTPUTLEN;
   }
 
   if(xlen > 0){
     aes128ctr_publicinputs(ctx->buf, 1, nonce, ctx->ctr, ctx);
-    ctx->ctr += (RNG_OUTPUTLEN/AES256_BLOCKSIZE);
+    ctx->ctr += (RNG_OUTPUTLEN/AES128_BLOCKSIZE);
     memcpy(out, ctx->buf, xlen);
     ctx->used = xlen;
   }
@@ -361,12 +290,12 @@ void prng_skip_publicinputs(prng_publicinputs_t *ctx, unsigned long outlen)
   unsigned long rem = outlen - n_blocks_skip*RNG_OUTPUTLEN;
   uint8_t nonce[AES128CTR_NONCELEN] = {0};
   if(rem) {
-    ctx->ctr += n_blocks_skip*(RNG_OUTPUTLEN/AES256_BLOCKSIZE);
+    ctx->ctr += n_blocks_skip*(RNG_OUTPUTLEN/AES128_BLOCKSIZE);
     ctx->used = rem;
     aes128ctr_publicinputs(ctx->buf, 1, nonce, ctx->ctr, ctx);
-    ctx->ctr += (RNG_OUTPUTLEN/AES256_BLOCKSIZE);
+    ctx->ctr += (RNG_OUTPUTLEN/AES128_BLOCKSIZE);
   } else {  // 0 == rem
-    ctx->ctr += n_blocks_skip*(RNG_OUTPUTLEN/AES256_BLOCKSIZE);
+    ctx->ctr += n_blocks_skip*(RNG_OUTPUTLEN/AES128_BLOCKSIZE);
     ctx->used = RNG_OUTPUTLEN;
   }
 }
