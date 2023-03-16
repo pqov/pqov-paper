@@ -19,14 +19,6 @@ extern  "C" {
 
 
 
-///
-/// @brief Computing public key from secret key, classic ov
-///
-/// @param[out] Qs       - the public key: l1_Q1, l1_Q2, l1_Q5
-/// @param[in]  Fs       - parts of the secret key: l1_F1, l1_F2
-/// @param[in]  Ts       - parts of the secret key: T1
-///
-void calculate_Q_from_F( pk_t * Qs, const sk_t * Fs , const sk_t * Ts );
 
 ///
 /// @brief Computing parts of the sk from parts of pk and sk
@@ -55,7 +47,7 @@ void ov_pkc_calculate_Q_from_F( cpk_t * Qs, const sk_t * Fs , const sk_t * Ts );
 /// @param[in]  P2       - P2 of the pk
 /// @param[in]  sk       - O of the sk
 ///
-void calculate_F2_P3( unsigned char * F2, unsigned char * P3, const unsigned char * P1 , const unsigned char * P2 , const unsigned char * sk );
+void calculate_F2_P3( unsigned char * F2, unsigned char * P3, const unsigned char * P1 , const unsigned char * P2 , const unsigned char * sk_O );
 
 ///
 /// @brief Computing sk F2 from P1, P2, and sk O
@@ -65,7 +57,7 @@ void calculate_F2_P3( unsigned char * F2, unsigned char * P3, const unsigned cha
 /// @param[in]  P2       - P2 of the pk
 /// @param[in]  sk       - O of the sk
 ///
-void calculate_F2( unsigned char * F2, const unsigned char * P1 , const unsigned char * P2 , const unsigned char * sk );
+void calculate_F2( unsigned char * F2, const unsigned char * P1 , const unsigned char * P2 , const unsigned char * sk_O );
 
 ///
 /// @brief Computing P3 of the pk from P1, P2, and sk O
@@ -75,7 +67,7 @@ void calculate_F2( unsigned char * F2, const unsigned char * P1 , const unsigned
 /// @param[in]  P2       - P2 of the pk
 /// @param[in]  sk       - O of the sk
 ///
-void calculate_P3( unsigned char * P3, const unsigned char * P1 , const unsigned char * P2 , const unsigned char * sk );
+void calculate_P3( unsigned char * P3, const unsigned char * P1 , const unsigned char * P2 , const unsigned char * sk_O );
 
 
 
