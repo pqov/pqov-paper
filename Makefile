@@ -184,6 +184,14 @@ ifdef GPROF
 	LDFLAGS += -pg
 endif
 
+ifdef VALGRIND
+        CFLAGS   += -D_VALGRIND_ #-g
+        CXXFLAGS += -D_VALGRIND_ #-g
+        CFLAGS   := $(CFLAGS:-O%=-O1)
+        CXXFLAGS := $(CXXFLAGS:-O%=-O1)
+endif
+
+
 .PHONY: all tests tables clean
 
 all: $(EXE)
@@ -226,12 +234,14 @@ endef
 $(foreach dir, $(SRC_EXT_DIRS), $(eval $(call GEN_O,$(dir))))
 
 
-
 %.o: %.c
 	$(CC) $(CFLAGS) $(INCPATH) -c $<
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) $(INCPATH) -c $<
+
+valgrind: sign_api-test
+	valgrind --leak-check=yes --track-origins=yes -s ./sign_api-test
 
 tests:
 	cd tests; make

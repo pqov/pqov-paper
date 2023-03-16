@@ -49,6 +49,24 @@ for generating 3 executables:
 2. sign_api-benchmark: reporting performance numbers for signature API functions.  
 2. rec-sign-benchmark: reporting more detailed performance numbers for signature API functions. Number format: ''average /numbers of testing (1st quartile, median, 3rd quartile)''  
 
+### Valgrind test for constant-time and memory leakage
+
+Experiments on checking timing leakage using Valgrind:  
+```
+make VALGRIND=1 valgrind
+```
+It will first mark the secret data as undefined values and then run valgrind to investigating sign_api-test executable for accessing undefined values.  
+We have remove some false positive errors. Please use
+```
+grep -r "_VALGRIND"
+```
+to see all the code involving in the experiments.
+
+
+The Valgrind experiment applies to other makefile parameters as well. for ex.  
+```
+make VALGRIND=1 PROJ=avx2 PARAM=4 valgrind
+```
 
 ### **Options for Parameters:**
 
