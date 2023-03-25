@@ -51,7 +51,6 @@ crypto_sign_keypair_sk(unsigned char *sk, unsigned char *pk_seed)
 
 
 #if defined _OV_CLASSIC
-    (void)pk_seed;
     generate_secretkey((sk_t *)sk, pk_seed, sk_seed);
 #elif defined _OV_PKC
 
@@ -77,8 +76,7 @@ int
 crypto_sign_keypair_pk(unsigned char *pk, const unsigned char *sk, const unsigned char *pk_seed)
 {
     #if defined _OV_CLASSIC
-        (void) pk_seed;
-        return sk_to_pk((pk_t*) pk, (const sk_t *) sk);
+        return sk_to_pk((pk_t*) pk, (const sk_t *) sk, pk_seed);
     #elif defined _OV_PKC
         cpk_t *cpk = (cpk_t *)pk;
         memcpy(cpk->pk_seed, pk_seed, LEN_PKSEED);

@@ -34,7 +34,6 @@ struct {
 typedef
 struct {
     unsigned char sk_seed[LEN_SKSEED];   ///< seed for generating secret key
-    unsigned char pk_seed[LEN_PKSEED];   ///< seed for generating Q1,Q2 of public key
 
     unsigned char t1[_V_BYTE*_O];   ///< T map
 

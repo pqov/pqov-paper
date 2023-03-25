@@ -52,7 +52,7 @@ void generate_secretkey( sk_t* sk, const unsigned char *pk_seed, const unsigned 
 /// @param[in] sk         - the secret key.
 /// @return 0 for success. -1 otherwise.
 ///
-int sk_to_pk( pk_t * pk , const sk_t* sk );
+int sk_to_pk( pk_t * pk , const sk_t* sk , const unsigned char *pk_seed);
 
 
 
