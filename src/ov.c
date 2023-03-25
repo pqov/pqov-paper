@@ -25,12 +25,20 @@
 
 /////////////////////////////
 
+#if defined(_VALGRIND_)
+#include "valgrind/memcheck.h"
+#endif
+
 int ov_sign( uint8_t * signature , const sk_t * sk , const uint8_t * message , unsigned mlen )
 {
     // allocate temporary storage.
     uint8_t mat_l1[_O*_O_BYTE];
     uint8_t salt[_SALT_BYTE];
     randombytes( salt , _SALT_BYTE );
+    #if defined(_VALGRIND_)
+    VALGRIND_MAKE_MEM_UNDEFINED(salt, _SALT_BYTE );  // mark secret data as undefined data
+    VALGRIND_MAKE_MEM_UNDEFINED(sk, OV_SECRETKEYBYTES );  // mark secret data as undefined data
+    #endif
     uint8_t vinegar[_V_BYTE];
     uint8_t r_l1_F1[_O_BYTE] = {0};
     uint8_t y[_PUB_N_BYTE];
@@ -67,6 +75,10 @@ int ov_sign( uint8_t * signature , const sk_t * sk , const uint8_t * message , u
         hash_update(&h_vinegar, &ctr, 1 );                  // H(M||salt||sk_seed||ctr ...
         hash_final_digest( vinegar, _V_BYTE , &h_vinegar);  // H(M||salt||sk_seed||ctr)
         ctr++;
+        #if defined(_VALGRIND_)
+        VALGRIND_MAKE_MEM_UNDEFINED(vinegar, _V_BYTE );  // mark secret data as undefined data
+        #endif
+
 #if defined(_BACK_SUBSTITUTION_)
 
 // linear system:
@@ -88,11 +100,17 @@ int ov_sign( uint8_t * signature , const sk_t * sk , const uint8_t * message , u
 
 #if _GFSIZE == 256
         l1_succ = gf256mat_gaussian_elim(mat_l1 , r_l1_F1, _O);
+        #if defined(_VALGRIND_)
+        VALGRIND_MAKE_MEM_DEFINED(&l1_succ, sizeof(unsigned) );  // this is ok cause it's reject sampling
+        #endif
         if( !l1_succ ) continue;
         gf256mat_back_substitute(r_l1_F1, mat_l1, _O);
         memcpy( x_o1 , r_l1_F1 , _O_BYTE );
 #elif _GFSIZE == 16
         l1_succ = gf16mat_gaussian_elim(mat_l1 , r_l1_F1, _O);
+        #if defined(_VALGRIND_)
+        VALGRIND_MAKE_MEM_DEFINED(&l1_succ, sizeof(unsigned) );  // this is ok cause it's reject sampling
+        #endif
         if( !l1_succ ) continue;
         gf16mat_back_substitute(r_l1_F1, mat_l1, _O);
         memcpy( x_o1 , r_l1_F1 , _O_BYTE );
@@ -124,6 +142,9 @@ error -- _GFSIZE
 #else
         l1_succ = gfmat_inv( mat_l1 , mat_l1 , _O );         // check if the linear equation solvable
 #endif
+        #if defined(_VALGRIND_)
+        VALGRIND_MAKE_MEM_DEFINED(&l1_succ, sizeof(unsigned) );  // this is of cause it's reject sampling
+        #endif
 	if( l1_succ ) break;
     }
     hash_final_digest( NULL , 0 , &h_vinegar_copy); // free
@@ -194,6 +215,9 @@ int _ov_verify( const uint8_t * message , unsigned mlen , const uint8_t * salt ,
 #if !(defined(_OV_PKC) || defined(_OV_PKC_SKC)) || !defined(_SAVE_MEMORY_)
 int ov_verify( const uint8_t * message , unsigned mlen , const uint8_t * signature , const pk_t * pk )
 {
+    #if defined(_VALGRIND_)
+    VALGRIND_MAKE_MEM_DEFINED(signature, OV_SIGNATUREBYTES );  // mark signature as public data
+    #endif
     unsigned char digest_ck[_PUB_M_BYTE];
     ov_publicmap( digest_ck , pk->pk , signature );
 
