@@ -31,10 +31,6 @@ void randombytes(unsigned char *x, unsigned long long xlen);
 /////////////////  defination of prng_t and prng_publicinputs_t  /////////////////////////////////
 
 
-#define AES256CTR_KEYLEN   32
-#define AES256CTR_NONCELEN 16
-#define AES256_BLOCKSIZE 16
-
 #define AES128CTR_KEYLEN   16
 #define AES128CTR_NONCELEN 16
 #define AES128_BLOCKSIZE 16
@@ -118,30 +114,6 @@ typedef struct {
     uint32_t key[ 88 ];
 #endif
 } prng_publicinputs_t;
-
-
-#elif defined(_UTILS_OPENSSL_)&&(!defined(_4ROUND_AES_))
-
-
-// TODO: check that this is actually the best value here;
-#define RNG_OUTPUTLEN 64
-
-//
-// This is default struct of prng_t
-// It is used by _UTILS_OPENSSL_ and aes256ctr.h
-// The roundkey of AES256 is not stored in the struct.
-// TODO: move key expansion to prng_set
-//
-
-typedef struct {
-    unsigned used;
-    uint32_t ctr;
-    unsigned char   buf[RNG_OUTPUTLEN];
-    unsigned char   key[AES128CTR_KEYLEN];
-} prng_publicinputs_t;
-
-
-
 
 
 #else
