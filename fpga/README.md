@@ -57,7 +57,7 @@ python scripts/run_all_synthesis.py test_files/one-round-aes/gauss-10round-aes/ 
 ./scripts/hardware_result                                                          // Report all synthesized results
 ```
 
-- Test version 2
+- Test version 2 (use additional multipliers)
 
 ```
 python gen_processor_v2.py test_files/v2/1p-classic.cfg
