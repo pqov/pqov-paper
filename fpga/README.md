@@ -65,6 +65,23 @@ python gen_processor_v2.py test_files/v2/1p-classic.cfg
 ./scripts/run_synthesis
 ```
 
+- Experiments for the paper
+	- Cycle count
+		
+		```
+		python scripts/run_all_simulation.py test_files/one-round-aes/
+		python scripts/run_all_simulation.py test_files/pipelined-aes/
+		// collect results from test_files/one-round-aes/logs and test_files/pipelined-aes/logs
+		```
+	
+	- Utilization
+
+		```
+		python scripts/run_all_synthesis.py test_files/one-round-aes/
+		python scripts/run_all_synthesis.py test_files/pipelined-aes/
+		./scripts/hardware_result
+		```
+
 ## Others
 
 ### Python simulator
