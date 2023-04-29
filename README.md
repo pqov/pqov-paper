@@ -1,199 +1,115 @@
-This repository contains the code accompanying the paper **Oil and Vinegar: Modern Parameters and
-Implementations** which is available [here](https://eprint.iacr.org/2023/059).
+# OV processor
 
-This repository contains OV implementations targeting x86 (with AVX2), Armv8 (with Neon), Arm Cortex-M4, and FPGA. 
+## Prerequisites
 
-Authors: 
- - Ward Beullens
- - Ming-Shing Chen
- - Shih-Hao Hung
- - Matthias J. Kannwischer
- - Bo-Yuan Peng
- - Cheng-Jhih Shih
- - Bo-Yin Yang
- 
- 
-**Warning: This is the version of the code accompanying the paper. This is not the NIST submission! Parameters and implementations may still change for the NIST submission. Official reference code will be posted separately.**
+### Hardware environment
 
-# Parameters 
+- We test `SL1-p` and `SL1-s` on a AVNET Zedboard Zynq-7000 Development Board, XC7Z020
+- We test `SL3` and `SL5` on a Digilent Nexys Video Artix-7 FPGA, XC7A200T.
 
-| Parameter    | signature size | pk size  | sk size | pkc size | compressed-sk size |  
-|:-----------: |:--------------:|--------- |---------|------------|--------------------|
-|GF(16),160,64 | 96             |412,160   |348,704  |66,576      | 48                 |
-|GF(256),112,44| 128            |278,432   |237,896  |43,576      | 48                 |
-|GF(256),184,72| 200            |1,225,440 |1,044,320|189,232     | 48                 |
-|GF(256),244,96| 260            |2,869,440 |2,436,704|446,992     | 48                 |
+### Software
 
-# Cortex-M4 
-For the Cortex-M4 implementations, see [m4/README.md](./m4/README.md)
+- Python 3.10 with packages `numba pycryptodome pyfinite libconf`
+- Vivado v2022.1 on Ubuntu 18.04
+- RTL simulation tools: `ncverilog`, `vcs` or `iverilog`
 
-# FPGA
-For the FPGA implementations, see [fpga/README.md](./fpga/README.md)
+## Folder structure
 
-# x86 (AVX2) and Armv8 (Neon)
-
-## Contents
-
-- **src** : Source code.
-- **utils**  : utilities for AES, SHAKE, and PRNGs. The default setting calls openssl library.
-- **unit_tests**  : unit testers.
-
-## Instructions for testing/benchmarks
-
-Type **make**    
 ```
-make
-```
-for generating 3 executables:  
-1. sign_api-test : testing for API functions (crypto_keygen(), crypto_sign(), and crypto_verify()).  
-2. sign_api-benchmark: reporting performance numbers for signature API functions.  
-2. rec-sign-benchmark: reporting more detailed performance numbers for signature API functions. Number format: ''average /numbers of testing (1st quartile, median, 3rd quartile)''  
-
-### Valgrind test for constant-time and memory leakage
-
-Experiments on checking timing leakage using Valgrind:  
-```
-make VALGRIND=1 valgrind
-```
-It will first mark the secret data as undefined values and then run valgrind to investigating sign_api-test executable for accessing undefined values.  
-We have remove some false positive errors. Please use
-```
-grep -r "_VALGRIND"
-```
-to see all the code involving in the experiments.
-
-
-The Valgrind experiment applies to other makefile parameters as well. for ex.  
-```
-make VALGRIND=1 PROJ=avx2 PARAM=4 valgrind
+├── test_files            // Hardware configuration files
+├── Makefile              // Used for simulation
+├── onboard               // Tickle files to generate the system
+├── scripts               // Scripts for simulation and sythesis
+│
+├── gen_processor.py      // Use this python code to config and generate verilog codes
+├── simulator             // Python simulator providing behavior simulation
+├── rtl                   // Verilog codes
+├── gen_processor_v2.py   // Use this python code to config and generate verilog codes (v2)
+├── simulator_v2          // Python simulator providing behavior simulation (v2)
+└── rtl_v2                // Verilog codes (v2)
 ```
 
-### **Options for Parameters:**
+## Usage
 
-For compiling different parameters, we use the macros ( **_OV256_112_44** / **_OV256_184_72** / **_OV256_244_96** / **_OV16_160_64** ) to control the C source code.  
-The default setting is **_OV256_112_44** defined in **src/params.h**.  
+- RTL simulation (may take a while)
 
-The other option is to use our makefile:  
-1. **_OV16_160_64** :
 ```
-make PARAM=1
-```
-2. **_OV256_112_44** :
-```
-make
-```
-or
-```
-make PARAM=3
-```
-3. **_OV256_184_72** :
-```
-make PARAM=4
-```
-4. **_OV256_244_96** :
-```
-make PARAM=5
+python gen_processor.py test_files/one-round-aes/gauss-10round-aes/SL1-p/classic.cfg  // configuration for 1p classic with 1round AES
+./scripts/csh_run_sim                                                                 // This script includes csh file to use vcs or ncverilog, modify it to the path your computer
 ```
 
+- Vivado synthesis
 
-### **Options for Variants:**
+```
+python gen_processor.py test_files/one-round-aes/gauss-10round-aes/SL1-p/classic.cfg
+./scripts/run_synthesis
+// It will generate a folder "test_files_one-round-aes_gauss-10round-aes_SL1-p_classic_cfg"
 
-For compiling different variants, we use the macros ( **_OV_CLASSIC** / **_OV_PKC** / **_OV_PKC_SKC** ) to control the C source code.  
-The default setting is **_OV_CLASSIC** defined in **src/params.h**.  
-
-The other option is to use our makefile:  
-1. **_OV_CLASSIC** :
-```
-make
-```
-or
-```
-make VARIANT=1
-```
-2. **_OV_PKC** :
-```
-make VARIANT=2
-```
-3. **_OV_PKC_SKC** :
-```
-make VARIANT=3
-```
-4. **_OV256_244_96** and **_OV_PKC** :
-```
-make VARIANT=2 PARAM=5
+// Get the hardware result
+vivado -mode tcl -source ./scripts/report.tcl -tclargs "test_files_one-round-aes_gauss-10round-aes_SL1-p_classic_cfg"
 ```
 
-### **Optimizations for Architectures:**
+- Run simulation and sythesis for all configuration files in a path
 
-#### **Reference Version:**
-The reference uses (1) source code in the directories: **src/** , **src/ref/**, and  
-(2) directories for utilities of AES, SHAKE, and randombytes() : **utils/** .  
-The default implementation for AES and SHAKE is from openssl library, controlled by the macro **_UTILS_OPENSSL_** defined in **src/config.h**.  
-
-Or, use our makefile:  
-1. Reference version (**_OV256_112_44** and **_OV_CLASSIC**):
 ```
-make
-```
-2. Reference version, **_OV256_244_96** , and **_OV_PKC** :
-```
-make VARIANT=2 PARAM=5
+python scripts/run_all_simulation.py test_files/one-round-aes/                     // Run simulation
+python scripts/run_all_synthesis.py test_files/one-round-aes/gauss-10round-aes/    // Run synthesis and generate xsa file
+./scripts/hardware_result                                                          // Report all synthesized results
 ```
 
+- Test version 2 (use additional multipliers)
 
-To turn on the option of 4-round AES, one need to turn on the macro **_4ROUND_AES\_** defined in **src/params.h**.  
-
-
-#### **AVX2 Version:**
-The AVX2 option uses (1) source code in the directories: **src/** , **src/amd64** , **src/ssse3** , **src/avx2**, and  
-(2) directories for utilities of AES, SHAKE, and randombytes() : **utils/**, **utils/x86aesni** .  
-(3) One stil need to turn on the macros **_BLAS_AVX2\_**, **_MUL_WITH_MULTAB\_**, **_UTILS_AESNI\_** defined in **src/config.h** to enable AVX2 optimization.  
-
-Or, use our makefile:  
-1. AVX2 version (**_OV256_112_44** and **_OV_CLASSIC**):
 ```
-make PROJ=avx2
-```
-2. AVX2 version, **_OV256_184_72**, and **_OV_PKC**:
-```
-make PROJ=avx2 PARAM=4 VARIANT=2
+python gen_processor_v2.py test_files/v2/1p-classic.cfg
+./scripts/csh_run_sim
+./scripts/run_synthesis
 ```
 
-#### **NEON Version:**
-The NEON option uses (1) source code in the **src/** , **src/amd64** , **src/neon**, and  
-(2) directories for utilities of AES, SHAKE, and randombytes() : **utils/**, ( **utils/neon_aesinst** (Armv8 AES instruction) or **utils/neon_aes**(NEON bitslice AES implemetation) ).  
-(3) One stil need to turn on the macros **_BLAS_NEON\_** , **_UTILS_NEONAES\_** defined in **src/config.h** to enable NEON optimization.  
-(4) Depending on the CPUs and parameters, one can choose to define the macro **_MUL_WITH_MULTAB\_** for GF multiplication with MUL tables. We suggest to turn on it for the **_OV16_160_64** parameter.  
+- Experiments for the paper
+	- Cycle count
+		
+		```
+		python scripts/run_all_simulation.py test_files/one-round-aes/
+		python scripts/run_all_simulation.py test_files/pipelined-aes/
+		// collect results from test_files/one-round-aes/logs and test_files/pipelined-aes/logs
+		```
+	
+	- Utilization
 
-Or, use our makefile:  
-1. NEON version (**_OV256_112_44** and **_OV_CLASSIC**):
-```
-make PROJ=neon
-```
-2. Another example: NEON version, **_OV16_160_64**, and **_OV_PKC_SKC**:
-```
-make PROJ=neon PARAM=1 VARIANT=3
-```
+		```
+		python scripts/run_all_synthesis.py test_files/one-round-aes/
+		python scripts/run_all_synthesis.py test_files/pipelined-aes/
+		./scripts/hardware_result
+		```
 
-Notes for **Apple Mac M1**:  
-1. We use
-```
-uname -s
-```
-to detect if running on Mac OS.
-If **uname** returns string containing **Darwin**,
-the makefile will define **_MAC_OS\_** macro for enabling some optimization settings in the source code .  
-2. The program needs **sudo** to benchmark on Mac OS correctly.
+## Others
 
+### Python simulator
 
-### **Options for Algorithm of Solving Linear Equation while Signing:**
-1. Default setting: Gaussian Elimination and backward substitution.
-2. Choose the algorithm of calculating inversion matrix with block matrix compution:  
-  (a) Define the **_LDU_DECOMPOSE\_** macro in **src/parms.h**.  
-  (b) Remove the **_BACK_SUBSTITUTION\_** macro in **src/ov.c**.  
+- We also provide python simulator to perform behavioral simulation.
 
+	```
+	python simulator/codegen.py -n 16 -v 68 -o 44 -g 8 -m classic -r 10  -e        // Generate test.data and simulate
+	python simulator/codegen.py -h                                                 // See the meaning of parameters
+	```
 
-# License
+### The configuration file
 
-Our implementations of OV are released under the conditions of [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
-Third party code may have other licenses which is stated at the top of each file or in the respective LICENSE files.
+- Sepcify the variables in this file
+- Example:
+
+	```
+	N = 16;
+	V = 68;
+	O = 44;
+	GF_bit = 8;
+	row_layout = [8, 8];
+	col_layout = [4, 4, 4, 4];
+	right_delay_every_X_resource_unit = 1;
+	mode = "classic";
+	aes_round = 10;
+	use_inversion = false;
+	use_tower_field = false;
+	use_pipelined_aes = false;
+	platform = "zedboard";
+	```
