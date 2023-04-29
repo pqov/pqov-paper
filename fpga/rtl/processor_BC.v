@@ -1,12 +1,7 @@
 `include "define.v"
 module processor_BC #(
     parameter GF_BIT  = 4,
-    parameter OP_CODE_LEN = 4,
-    parameter ROW_IDX = 0,
-    parameter COL_IDX = 1,
-    parameter TILE_ROW_IDX = 0,
-    parameter TILE_COL_IDX = 1,
-    parameter NUM_PROC_COL = 3
+    parameter OP_CODE_LEN = 4
 )(
     input  wire                   clk,
     input  wire                   start_in,
@@ -24,11 +19,7 @@ module processor_BC #(
     output wire      [GF_BIT-1:0] dataA_out,
     output reg       [GF_BIT-1:0] r
 );
-    reg [GF_BIT-1:0] rand_reg;
-    always @(posedge clk) begin
-        rand_reg <= (op_in[2:0] == 7) ? dataB_in : rand_reg;
-    end
-
+    
     wire [GF_BIT-1:0] mul_o, mul_a;
     reg [GF_BIT-1:0] mul_b; 
     assign mul_a = dataB_in;
@@ -39,7 +30,7 @@ module processor_BC #(
     // GAUSS (others): op_in = 0001, gauss_op_in = 11/01 -> 11 
     always @(*) begin
         case({op_in[0], gauss_op_in[0]})
-            0: mul_b = rand_reg;
+            0: mul_b = dataA_in;
             1: mul_b = key_data;
             2: mul_b = r;
             3: mul_b = data_in;
@@ -91,10 +82,9 @@ module processor_BC #(
 
     assign start_out = start_in;
     assign gauss_op_out = gauss_op_in;
-    assign dataB_out = (op_in[2:0] == 5) ? r : 
-                       (op_in[2:0] == 7) ? rand_reg : dataB_in;
+    assign dataB_out = (op_in[2:0] == 5) ? r : dataB_in;
 
-    // assign dataA_out = dataA_in;
+    assign dataA_out = dataA_in;
     assign op_out = op_in;
 endmodule
 

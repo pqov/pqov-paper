@@ -1,12 +1,7 @@
 `include "define.v"
 module processor_AB #(
     parameter GF_BIT  = 4,
-    parameter OP_CODE_LEN = 4,
-    parameter ROW_IDX = 0,
-    parameter COL_IDX = 1,
-    parameter TILE_ROW_IDX = 0,
-    parameter TILE_COL_IDX = 1,
-    parameter NUM_PROC_COL = 3
+    parameter OP_CODE_LEN = 4
 )(
     input  wire                   clk,
     input  wire                   start_in,

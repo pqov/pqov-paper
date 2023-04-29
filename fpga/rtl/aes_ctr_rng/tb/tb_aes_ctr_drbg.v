@@ -7,6 +7,10 @@
 // The testbench for AES based CTR-DRBG. This illustrates the usage
 // of the DRBG implementation.
 //
+// Author: Bo-Yuan Peng
+// Copyright (c) 2020,
+//     National Taiwan University and Academia Sinica, Taiwan.
+// All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or
 // without modification, are permitted provided that the following

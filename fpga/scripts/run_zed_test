@@ -1,0 +1,39 @@
+#!/bin/bash
+if [ $# -ne 1  ]; then
+    echo "Usage: \"./scripts/run_zed_test <folder generated after running run_synthsis>\"";
+    exit
+fi
+
+hostip=10.42.0.87
+password=temppwd
+
+if ping -c 1 -W 1 "$hostip"; then
+    echo "FPGA IP: $hostip"
+else
+    echo "Setup FPGA Internet access first"
+    exit
+fi
+
+### Copy test files
+cd $1
+scp -r host test.data ubuntu@$hostip:~/ &>/dev/null
+
+
+echo ""
+echo "Self Test"
+### Compile codes on FPGA
+echo $password | ssh ubuntu@$hostip  "sudo -S bash -c 'gcc host/sdcard_test/uov.c && ./a.out test.data'"
+
+
+if ssh ubuntu@$hostip '[ -d pquov ]'; then
+    echo ""
+    echo "pquov exists, continue the consistency test"
+else
+    echo "pquov does not exist, clone it first"
+    exit
+fi
+
+ssh ubuntu@$hostip  "bash -c 'cp -r host/sdcard_test/pquov . && cd pquov && make'" &>/dev/null
+
+echo $password | ssh ubuntu@$hostip  "sudo -S bash -c './pquov/ov-test test.data'"
+

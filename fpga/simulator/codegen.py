@@ -171,6 +171,8 @@ inst_template = [ # [4-bit rs2][4-bit rs1][18-bit immediate][6-bit opcode]
                   "{:0"+str(reg_len)+"b}_{:0"+str(reg_len)+"b}_"+"0"*(imm_len-2*reg_len-2*data_addr_len)+"_{:0"+str(data_addr_len)+"b}_{:0"+str(data_addr_len)+"b}_{:0"+str(reg_len)+"b}_{:0"+str(reg_len)+"b}"+"_{:s}",
                   # [15-bit unused][3-bit data_addr1][8-bit unused][6-bit opcode]
                   "0"*(2*reg_len+(imm_len-2*reg_len-data_addr_len))+"_{:0"+str(data_addr_len)+"b}_"+"0"*(2*reg_len)+"_{:s}",
+                  # [4-bit rs2][4-bit rs1][7-bit imm2][3-bit data_addr1][8-bit imm1][6-bit opcode]
+                  "{:0"+str(reg_len)+"b}_{:0"+str(reg_len)+"b}_"+"{:0"+str(imm_len-2*reg_len-data_addr_len)+"b}_{:0"+str(data_addr_len)+"b}_"+"{:0"+str(2*reg_len)+"b}_{:s}",
                 ]
 
 # Register the instructions into the designated formats
@@ -197,7 +199,7 @@ for s in inst_template3_funcs:
     exec("def {func_name}(rs1): \
               register_instruction('{func_name}', {which}, rs1)".format(func_name=s, which=3))
 
-inst_template4_funcs = ["mul_l_inv", "mul_o", "store_keys", "load_keys", "calc_l", "mul_key_sig"]
+inst_template4_funcs = ["mul_l_inv", "mul_o", "store_keys", "load_keys", "calc_l"]
 for s in inst_template4_funcs:
     exec("def {func_name}(data_addr, rs1, rs2): \
               register_instruction('{func_name}', {which}, rs2, rs1, data_addr)".format(func_name=s, which=4))
@@ -211,6 +213,11 @@ inst_template6_funcs = ["eval"]
 for s in inst_template6_funcs:
     exec("def {func_name}(data_addr): \
               register_instruction('{func_name}', {which}, data_addr)".format(func_name=s, which=6))
+
+inst_template7_funcs = ["mul_key_sig"]
+for s in inst_template7_funcs:
+    exec("def {func_name}(data_addr, rs1, rs2, imm): \
+              register_instruction('{func_name}', {which}, rs2, rs1, imm>>8, data_addr, imm&255)".format(func_name=s, which=7))
 
 # Estimate the cycle count for each instruction.
 cycle_map_ = {"addi"           : 1,
@@ -516,6 +523,7 @@ def behavior_simulation(inst_map_, inv_inst_map_, cycle_map_, inst_, to_simulate
             rs2 = to_int(current_inst[-op_len-imm_len-2*reg_len:-op_len-imm_len-reg_len])
             rs3 = to_int(current_inst[-op_len-1*reg_len:-op_len-0*reg_len])
             rs4 = to_int(current_inst[-op_len-2*reg_len:-op_len-1*reg_len])
+            imm_mul_key = to_int(current_inst[-op_len-18:-op_len-11]+current_inst[-op_len-8:-op_len])
             cycle_count += cycle_map_[op]
 
             # print("============================================================================================================")
@@ -756,40 +764,67 @@ def behavior_simulation(inst_map_, inv_inst_map_, cycle_map_, inst_, to_simulate
                                     matrix_reg[k%N][O_-1-k//N] = matrix_reg[k%N][O_-1-k//N] ^ mul(key_mem[int(mul1_addr)][k], temp)
                 case "mul_key_sig":
                     temp_buff = np.zeros((O_+1)*N, dtype=np.uint8)
-                    for i in range(O_+1):
-                        for j in range(N):
-                            temp_buff[i*N+j] = buffer_bram[buffer_cnt+i][j]
-                    for i in range(O_):
-                        data_pipe = [0]*N
-                        for j in range(N):
-                            if (i == (O_-1) and j >= o_mod_n and o_mod_n != 0):
-                                data_pipe[j] = 0
-                            else:
-                                data_pipe[j] = temp_buff[i*N+j+((o_mod_n*rand_state)%N)]
-                        for j in range(O_-1, 0, -1): # column
+                    init_row = control_reg[rs1]
+                    init_col = control_reg[rs2]
+                    buffer_cnt = 0
+                    for t in range(imm_mul_key):
+                        if init_row >= V:
+                            break
+                        for i in range(O_+1):
+                            for j in range(N):
+                                temp_buff[i*N+j] = buffer_bram[buffer_cnt+i][j]
+                        for i in range(O_):
+                            data_pipe = [0]*N
+                            for j in range(N):
+                                if (i == (O_-1) and j >= o_mod_n and o_mod_n != 0):
+                                    data_pipe[j] = 0
+                                else:
+                                    data_pipe[j] = temp_buff[i*N+j+((o_mod_n*rand_state)%N)]
+                            for j in range(O_-1, 0, -1): # column
+                                for k in range(N): # row
+                                    rand_reg[k][j] = rand_reg[k][j-1]
                             for k in range(N): # row
-                                rand_reg[k][j] = rand_reg[k][j-1]
-                        for k in range(N): # row
-                            rand_reg[k][0] = data_pipe[k]
-                    if O == 96 or O == 64:
-                        buffer_cnt += O_
-                    else:
-                        if O == 44:
-                            if rand_state == 0:
-                                buffer_cnt += (O_-1)
-                            else:
-                                buffer_cnt += O_
-                        elif O == 72:
-                            if (rand_state & 1) == 0:
-                                buffer_cnt += (O_-1)
-                            else:
-                                buffer_cnt += O_
-                    rand_state = (rand_state + 1)%rand_state_num
+                                rand_reg[k][0] = data_pipe[k]
+                        if O == 96 or O == 64:
+                            buffer_cnt += O_
+                        else:
+                            if O == 44:
+                                if rand_state == 0:
+                                    buffer_cnt += (O_-1)
+                                else:
+                                    buffer_cnt += O_
+                            elif O == 72:
+                                if (rand_state & 1) == 0:
+                                    buffer_cnt += (O_-1)
+                                else:
+                                    buffer_cnt += O_
+                        rand_state = (rand_state + 1)%rand_state_num
 
-                    row, col = get_row_col(data_addr1)
-                    temp = mul(sig[row+control_reg[rs1]], sig[col+control_reg[rs2]])
-                    for i in range(O):
-                        matrix_reg[i%N][O_-1-i//N] = matrix_reg[i%N][O_-1-i//N] ^ mul(rand_reg[i%N][O_-1-i//N], temp)
+                        row, col = get_row_col(data_addr1)
+                        temp = mul(sig[row+init_row], sig[col+init_col])
+                        for i in range(O):
+                            matrix_reg[i%N][O_-1-i//N] = matrix_reg[i%N][O_-1-i//N] ^ mul(rand_reg[i%N][O_-1-i//N], temp)
+                        # print("mul_key_sig ")
+                        # if data_addr1 == P1:
+                        #     print("P1")
+                        # elif data_addr1 == P2:
+                        #     print("P2")
+                        # print("multiplied %02x" % temp)
+                        # for i in range(O):
+                        #     sys.stdout.write("%02x " % (matrix_reg[i%N][O_-1-i//N]))
+                        # print()
+                        # for i in range(O):
+                        #     sys.stdout.write("%02x " % (rand_reg[i%N][O_-1-i//N]))
+                        # print()
+                        if init_col == V-1:
+                            init_row += 1
+                            if data_addr1 == P1:
+                                init_col = init_row
+                            else:
+                                init_col = 0
+                        else:
+                            init_col += 1
+
                 case "store_l":
                     for i in range(O):
                         L_mem[0][i][control_reg[rs1]] = matrix_reg[i%N][O_-1-i//N]

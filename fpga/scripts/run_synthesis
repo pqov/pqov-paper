@@ -11,10 +11,14 @@ O_=$(python -c "from math import ceil; print(int(ceil(float($O)/float($N))))")
 KK=$(python -c "from math import ceil; print(2*($LL))")
 MODE="classic"
 AES_ROUND=10
+RTL_PATH="rtl"
 
 ENV_FOLDER="test_files_gauss-10round-aes_SL1-p_classic_cfg"
 mkdir -p $ENV_FOLDER/rtl/ && cp -r onboard/* host/ test.data $ENV_FOLDER/
 rm -rf $ENV_FOLDER/uovsystem/
-cp ./rtl/*.v ./rtl/sha3/*.v ./rtl/aes_ctr_rng/rtl/*.v ./rtl/utils/rtl/*.v $ENV_FOLDER/rtl/
+cp ./$RTL_PATH/*.v ./rtl/sha3/*.v ./rtl/aes_ctr_rng/rtl/*.v ./rtl/utils/rtl/*.v $ENV_FOLDER/rtl/
 cd $ENV_FOLDER/
 vivado -mode batch -source generate_system.zedboard.tcl
+# package start
+./build_zed_test
+# package end

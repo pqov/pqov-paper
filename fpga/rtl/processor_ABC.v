@@ -1,12 +1,7 @@
 `include "define.v"
 module processor_ABC #(
     parameter GF_BIT  = 4,
-    parameter OP_CODE_LEN = 4,
-    parameter ROW_IDX = 0,
-    parameter COL_IDX = 1,
-    parameter TILE_ROW_IDX = 0,
-    parameter TILE_COL_IDX = 1,
-    parameter NUM_PROC_COL = 3
+    parameter OP_CODE_LEN = 4
 )(
     input  wire                   clk,
     input  wire                   start_in,
@@ -27,11 +22,7 @@ module processor_ABC #(
     output reg       [GF_BIT-1:0] r,
     input  wire                   functionA
 );
-    reg [GF_BIT-1:0] rand_reg;
-    always @(posedge clk) begin
-        rand_reg <= (op_in[2:0] == 7) ? dataB_in : rand_reg;
-    end
-
+    
     wire [GF_BIT-1:0] inv_out;
     generate
         if (GF_BIT == 4) begin
@@ -59,7 +50,7 @@ module processor_ABC #(
     // GAUSS (others): op_in = 0001, gauss_op_in = 11/01 -> 11 
     always @(*) begin
         case({op_in[0], gauss_op_in[0]})
-            0: mul_b = rand_reg;
+            0: mul_b = dataA_in;
             1: mul_b = key_data;
             2: mul_b = r;
             3: mul_b = data_in;
@@ -121,10 +112,10 @@ module processor_ABC #(
                           ((data_in==0) ? 2'b00 : 
                           ((r==0)   ? 2'b01 : 2'b10))));
     assign dataB_out = (op_in[2:0] == 5) ? r :
-                       (op_in[2:0] == 7) ? rand_reg :
+                       (op_in[2:0] == 6) ? dataB_in :
                        !functionA ? dataB_in :
                         (gauss_op_out == 2'b10 ? data_in : inv_out);
 
-    // assign dataA_out = dataA_in;
+    assign dataA_out = dataA_in;
     assign op_out = op_in;
 endmodule

@@ -67,13 +67,14 @@ module uov #(
     wire              [$clog2(N+1)-1:0]          n_value = N;
     wire [$clog2(RAND_STATE_NUM+1)-1:0] rand_state_value = RAND_STATE_NUM;
 
-    localparam RIGHT_DELAY = 3;
+    localparam RIGHT_DELAY = 2;
     localparam UP_DELAY = 1;
     localparam GAUSS_DATA_DELAY = 2*RIGHT_DELAY + UP_DELAY + 1+1;
     localparam GAUSS_OP_DELAY   = 2*RIGHT_DELAY + 2*UP_DELAY + 1+1+1;
     localparam RA_DELAY         = 2*RIGHT_DELAY + UP_DELAY + 1+1+1;
     localparam STORE_KEYS_DELAY = 2*RIGHT_DELAY + UP_DELAY + 1;
     localparam UNLOAD_DELAY     = 2*UP_DELAY + 2*RIGHT_DELAY + 4;
+    localparam SPACING = 5;
 
     /*** Instructions ***/
     localparam ADDI           = 6'b000_000;
@@ -146,6 +147,7 @@ module uov #(
     wire         [3:0]        rs4 = inst_data_out[13:10];
     wire         [2:0] data_addr1 = inst_data_out[16:14];
     wire         [2:0] data_addr2 = inst_data_out[19:17];
+    wire        [14:0] imm_mul_key = {inst_data_out[23:17],inst_data_out[13:6]};
     
 
     // control instructions
@@ -1030,7 +1032,75 @@ module uov #(
         end
     end
 
+
+    // signals for mul_key_sig
+    reg [$clog2(V):0] mul_key_sig_current_row;
+    reg [$clog2(V):0] mul_key_sig_current_col;
+    reg [$clog2(V):0] mul_key_sig_end_row;
+    reg [$clog2(V):0] mul_key_sig_end_col;
+    reg [IMM_LEN-1:0] mul_key_end_proc_counter;
+    reg                mul_key_sig_finish;
+    reg [$clog2(O_):0] mul_key_sig_wait_cnt;
     
+    wire [$clog2(O_):0] mul_key_sig_wait_cnt_delay3;
+    buffering#(
+        .SIZE($clog2(O_)+1),
+        .DELAY(3)
+    ) buffer3_mul_key_sig_wait_cnt (clk, mul_key_sig_wait_cnt, mul_key_sig_wait_cnt_delay3);
+
+    wire [$clog2(O_):0] mul_key_sig_wait_cnt_delay4;
+    buffering#(
+        .SIZE($clog2(O_)+1),
+        .DELAY(4)
+    ) buffer1_mul_key_sig_wait_cnt (clk, mul_key_sig_wait_cnt, mul_key_sig_wait_cnt_delay4);
+    
+    wire mul_key_sig_finish_buffer;
+    buffering#(
+        .SIZE(1),
+        .DELAY(3)
+    ) adjusted_mul_key_sig_finish (clk, mul_key_sig_finish, mul_key_sig_finish_buffer);
+
+    wire [N*GF_BIT-1:0] data_pipe_mul_key_sig;
+    wire [N*GF_BIT-1:0] data_pipe;
+    buffering#(
+        .SIZE(N*GF_BIT),
+        .DELAY(1)
+    ) buffer_data_pipe_myl_key (clk, data_pipe, data_pipe_mul_key_sig);
+
+    wire [$clog2(RAND_STATE_NUM)-1:0] rand_state_mul_key_sig;
+    reg [$clog2(RAND_STATE_NUM)-1:0] rand_state;
+    
+    buffering#(
+        .SIZE($clog2(RAND_STATE_NUM)),
+        .DELAY(3)
+    ) buffer_mul_key_sig_rand_state (clk, rand_state, rand_state_mul_key_sig);
+
+    
+    always @(posedge clk or negedge rst_n) begin
+        if (~rst_n) begin
+            mul_key_sig_wait_cnt     <= 0;
+            mul_key_sig_current_row  <= 0;
+            mul_key_sig_current_col  <= 0;
+            mul_key_sig_end_row      <= 0;
+            mul_key_sig_end_col      <= 0;
+            mul_key_sig_finish       <= 0; 
+            mul_key_end_proc_counter <= 0; 
+        end else begin
+            mul_key_sig_wait_cnt     <= (op == MUL_KEY_SIG) ? 
+                                        (proc_counter >= mul_key_end_proc_counter ? 0 : ((proc_counter == 0) ? 0 : (mul_key_sig_wait_cnt == (O_-1) ? 0 : mul_key_sig_wait_cnt+1))) : 
+                                         mul_key_sig_wait_cnt;
+            mul_key_sig_end_row      <= V;
+            mul_key_sig_end_col      <= (data_addr1 == Q1) ? V : O;
+            mul_key_sig_current_row  <= (proc_counter == 0) ? control_reg[rs1] :
+                                        (mul_key_sig_wait_cnt == (O_-1) ? ((mul_key_sig_current_col == mul_key_sig_end_col-1) ? mul_key_sig_current_row + 1 : mul_key_sig_current_row) : 
+                                         mul_key_sig_current_row);
+            mul_key_sig_current_col  <= (proc_counter == 0) ? control_reg[rs2] :
+                                        (mul_key_sig_wait_cnt == (O_-1) ? ((mul_key_sig_current_col == mul_key_sig_end_col-1) ? (data_addr1 == Q2 ? 0 : mul_key_sig_current_row + 1) : mul_key_sig_current_col + 1) : 
+                                         mul_key_sig_current_col);
+            mul_key_sig_finish       <= (proc_counter == 0) ? 0 : (proc_counter == mul_key_end_proc_counter) || ((mul_key_sig_current_row == mul_key_sig_end_row-1) && (mul_key_sig_current_col == mul_key_sig_end_col-1) && (mul_key_sig_wait_cnt == (O_-1)));
+            mul_key_end_proc_counter <= (proc_counter == 0) ? (imm_mul_key*O_) : mul_key_end_proc_counter;
+        end
+    end 
 
 
     /*** Asynchronous buffer ***/ 
@@ -1038,8 +1108,6 @@ module uov #(
     wire [$clog2(N)-1:0] v_mod_n = V & (N-1);
     reg   [$clog2(BUFFER_DEPTH)-1:0] buffer_counter;
     reg                              read_buffer_end; 
-    reg                              read_buffer_end_r; 
-    reg [$clog2(RAND_STATE_NUM)-1:0] rand_state;
     reg   [$clog2(BUFFER_DEPTH)-1:0] buffer_rdaddress_r;
     wire  [$clog2(BUFFER_DEPTH)-1:0] buffer1_rdaddress = buffer_rdaddress_r + buffer_counter;
     reg   [$clog2(BUFFER_DEPTH)-1:0] buffer1_wraddress;
@@ -1073,26 +1141,28 @@ module uov #(
                                              0;
         end
     endgenerate
-    
+
+
     always @(posedge clk or negedge rst_n) begin
         if (~rst_n) begin
+            buffer_rdaddress_r <= 0;
             buffer_counter     <= 0;
             read_buffer_end    <= 0;
-            read_buffer_end_r  <= 0;
-            buffer_rdaddress_r <= 0;
         end else begin
-            buffer_rdaddress_r <= (op == AES_UPDATE_CTR || op == SHA_SQUEEZE_SK || op == SHA_HASH_SK) ? 0 :
-                                  read_buffer_end ? buffer_rdaddress_r+buffer_rdaddress_to_add :
+            buffer_rdaddress_r <= (op == AES_UPDATE_CTR || op == SHA_SQUEEZE_SK || op == SHA_HASH_SK || (op == MUL_KEY_SIG && proc_counter == 0)) ? 0 :
+                                  read_buffer_end || (op == MUL_KEY_SIG && mul_key_sig_wait_cnt == (O_-1)) ? buffer_rdaddress_r+buffer_rdaddress_to_add :           
                                   buffer_rdaddress_r;
-            buffer_counter     <= (op == AES_UPDATE_CTR || op == SHA_SQUEEZE_SK || op == SHA_HASH_SK) ? 0 :
-                                  read_buffer_end ? 0 : 
-                                  ((op == STORE_O || (op == MUL_KEY_SIG && !read_buffer_end_r) || op == SEND)) ? buffer_counter + 1 : 
+            buffer_counter     <= (op == AES_UPDATE_CTR || op == SHA_SQUEEZE_SK || op == SHA_HASH_SK || (op == MUL_KEY_SIG && proc_counter == 0)) ? 0 :
+                                  read_buffer_end || (op == MUL_KEY_SIG && mul_key_sig_wait_cnt == (O_-1)) ? 0 : 
+                                  ((op == STORE_O || op == MUL_KEY_SIG || op == SEND)) ? buffer_counter + 1 : 
                                   buffer_counter;
             read_buffer_end    <= ((op == STORE_O) && buffer_counter == V_+1) ||
-                                  (((op == MUL_KEY_SIG && !read_buffer_end_r) || op == SEND) && buffer_counter == O_+1);
-            read_buffer_end_r  <= read_buffer_end;
+                                  ((op == SEND) && buffer_counter == O_+1) ||
+                                  ((op == MUL_KEY_SIG) && mul_key_sig_finish);
         end
     end
+
+
     mem #(
         .WIDTH(64),
         .DEPTH(BUFFER_DEPTH)
@@ -1160,6 +1230,7 @@ module uov #(
     assign current_aes_state_buffer = (aes_round == 4) ? current_aes_state_buffer_4 : current_aes_state_buffer_10;
 `endif
 
+    
     always @(posedge clk) begin
 `ifdef USE_PIPELINED_AES
         aes_ready_buffer    <= aes_result_valid;
@@ -1171,6 +1242,7 @@ module uov #(
         sk_in               <= sha3_data_out;
         rand_state          <= (op == SHA_HASH_SK || op == SHA_SQUEEZE_SK) ? 0 :
                                (op == AES_UPDATE_CTR) ? imm[$clog2(RAND_STATE_NUM)-1+16:16] :
+                               (op == MUL_KEY_SIG && mul_key_sig_wait_cnt == (O_-1)) ? rand_state + 1 :
                                (read_buffer_end) ? rand_state + 1 : rand_state;
         buffer1_wren        <= (current_aes_state_buffer && aes_ready_buffer) || (sk_cnt > 0 && !sk_cnt_minus_1[0]);
         buffer2_wren        <= (current_aes_state_buffer && aes_ready_buffer) || (sk_cnt > 0 && sk_cnt_minus_1[0]);
@@ -1187,23 +1259,19 @@ module uov #(
         end
     endgenerate
 
-    wire [N*GF_BIT-1:0] data_pipe;
-    wire [$clog2(N)-1:0] which_buffer = (op == STORE_O) ? (v_mod_n*rand_state) : (o_mod_n*rand_state);
+    wire [$clog2(N)-1:0] which_buffer = (op == MUL_KEY_SIG) ? (o_mod_n*rand_state_mul_key_sig) :
+                                        (op == STORE_O) ? (v_mod_n*rand_state) : (o_mod_n*rand_state);
     wire [N-1:0] is_zero_data_pipe;
     generate
         for (i = 0; i < N; i=i+1) begin
             assign is_zero_data_pipe[i] = (op == STORE_O && (buffer_counter == (V_+2)) && i >= v_mod_n && v_mod_n != 0) ||
-                                          ((op == SEND || op == MUL_KEY_SIG) && (buffer_counter == (O_+2)) && i >= o_mod_n && o_mod_n != 0);
-            assign data_pipe[i*GF_BIT+(GF_BIT-1):i*GF_BIT] = (is_zero_data_pipe[i]) ? 0 : buffer_out_GF[i+which_buffer];
+                                          (op == SEND && (buffer_counter == (O_+2)) && i >= o_mod_n && o_mod_n != 0) ||
+                                          (op == MUL_KEY_SIG && mul_key_sig_wait_cnt_delay3 == (O_-1) && i >= o_mod_n && o_mod_n != 0);
+            assign data_pipe[i*GF_BIT+:GF_BIT] = (is_zero_data_pipe[i]) ? 0 : buffer_out_GF[i+which_buffer];
         end
     endgenerate
-   
-
-
     
 
-
-        
     /*** messages ***/
     wire [GF_BIT-1:0] message [0:O_*N-1];
     generate
@@ -1438,14 +1506,18 @@ module uov #(
         end
     end 
 
+    
+
     wire [$clog2(V):0] mul_key_row = (proc_counter > control_reg[rs1]) ? control_reg[rs1] : proc_counter;
     wire [$clog2(V):0] mul_key_col = (proc_counter > control_reg[rs1]) ? proc_counter : control_reg[rs1];
     wire [$clog2(V):0] data_row_w = (op == EVAL) ? eval_current_row :
                                     (op == CALC_L) ? calc_current_row :
                                     (op == MUL_KEY_O_PIPE) ? mul_key_row :
+                                    (op == MUL_KEY_SIG) ? mul_key_sig_current_row :
                                     control_reg[rs1];
     wire [$clog2(V):0] data_col_w = (op == EVAL) ? eval_current_col :
                                     (op == MUL_KEY_O_PIPE) ? mul_key_col :
+                                    (op == MUL_KEY_SIG) ? mul_key_sig_current_col :
                                     control_reg[rs2];
     reg [$clog2(V):0] data_row, data_col;
     always @(posedge clk) begin
@@ -1512,6 +1584,7 @@ module uov #(
     reg [GF_BIT-1:0] calc_l_input_buffer2;
     reg [GF_BIT-1:0] eval_input_buffer1;
     reg [GF_BIT-1:0] eval_input_buffer2;
+    reg [N*GF_BIT-1:0] eval_input_shift;
     generate
         always @(posedge clk) begin
             calc_l_index_r   <= calc_l_index_w;
@@ -1540,6 +1613,19 @@ module uov #(
             eval_input_buffer1     <= multiplied_signature;
             eval_input_buffer2     <= eval_input_buffer1;
             eval_input_r           <= {N{eval_input_buffer2}};
+        end
+        always @(posedge clk) begin
+            if (op == MUL_KEY_SIG && (mul_key_sig_wait_cnt_delay4 == (O_-1) || proc_counter == 4)) begin
+                for (n = 0; n < N; n=n+1) begin
+                    if (n == (SPACING*(O_-1))) begin
+                        eval_input_shift[n*GF_BIT+:GF_BIT] <= multiplied_signature;
+                    end else begin
+                        eval_input_shift[n*GF_BIT+:GF_BIT] <= 0;
+                    end
+                end
+            end else begin
+                eval_input_shift <= eval_input_shift >> (GF_BIT*SPACING);
+            end
         end
     endgenerate
 
@@ -1759,10 +1845,12 @@ module uov #(
                 key_addr_r      = key_bram_addr_r;
                 gauss_op_in_r   = {N{2'b01}};
             end
-            MUL_KEY_SIG: begin // 6, 7 send then mul
-                op_insts_r     = (read_buffer_end_r) ? 6 : 7;
-                op_finish      = (read_buffer_end_r) ? 0 : 1;
-                dataB_in       = (read_buffer_end_r) ? eval_input_r : data_pipe;
+            MUL_KEY_SIG: begin // 6, 0 send then mul
+                proc_counter_w = (mul_key_sig_finish_buffer) ? 0 : proc_counter + 1;
+                op_insts_r     = (proc_counter > 2) ? 6 : 0;
+                op_finish      = mul_key_sig_finish_buffer ? 0 : 1;
+                dataB_in       = data_pipe_mul_key_sig;
+                dataA_in       = (proc_counter > 2) ? eval_input_shift : 0;
             end
             SEND: begin // 5
                 op_insts_r           = 5;
@@ -1825,8 +1913,9 @@ module uov #(
             for (n = 0; n < 16; n=n+1)
                 control_reg[n] <= 0;
         end else begin
-            for (n = 0; n < 16; n=n+1)
+            for (n = 0; n < 16; n=n+1) begin
                 control_reg[n] <= control_reg_w[n];
+            end
         end
     end
 
@@ -1919,27 +2008,22 @@ module uov #(
 
 
     // always @(posedge clk) begin
-    //     if ((states == KEYGEN_STATE)) begin
-    //     $display("doing_aes_to_tower: %d, doing_tower_to_aes %d", doing_aes_to_tower, doing_tower_to_aes);
-    //     $display("which_sig: %d", which_sig);
-    //     for (n = 0; n < N; n=n+1) begin
-    //         $display("(%2x %2x), (%2x %2x)", aes_to_tower_in[n], aes_to_tower_out[n], tower_to_aes_in[n], tower_to_aes_out[n]);
-    //     end
-    //     for (n = 0; n < 128/8; n=n+1) begin
-    //         $write("%2x ", aes_key[8*n+:8]);
-    //     end
-    //     $display();
-    //     $display("sha3_state: %d", sha3_state);
-    //     $display("pk_cnt_end: %d, current_aes_state: %d, pk_cnt: %d", pk_cnt_end, current_aes_state, pk_cnt);
-    //     $display("sk_cnt: %d, sk_cnt_temp: %d, sk_cnt_end: %d", sk_cnt, sk_cnt_temp, sk_cnt_end);
+    //     if ((states == VRFY_STATE)) begin
+    //     $display("proc_counter: %d", proc_counter);
+    //     $display("mul_key_sig_current_row: %d, mul_key_sig_current_col: %d, mul_key_sig_finish: %d, mul_key_sig_finish_buffer: %d, mul_key_sig_wait_cnt: %d, mul_key_end_proc_counter: %d", mul_key_sig_current_row, mul_key_sig_current_col, mul_key_sig_finish, mul_key_sig_finish_buffer, mul_key_sig_wait_cnt, mul_key_end_proc_counter);
+    //     $display("DataA %x, DataB %x, op_inst: %d", dataA_in, dataB_in, op_insts_r);
+    //     $display("(eval_input_buffer1: %x) <= (multiplied_signature: %x = %x * %x)", eval_input_buffer1, multiplied_signature, signature_rep1[eval_row_index_r], signature_rep2[eval_col_index_r]);
     //     $display("Buffer1, rdaddr: %d, rdq: %x, wraddr: %d, wren: %d, wdata: %x", buffer1_rdaddress, buffer1_q, buffer1_wraddress, buffer1_wren, buffer1_data);
     //     $display("Buffer2, rdaddr: %d, rdq: %x, wraddr: %d, wren: %d, wdata: %x", buffer2_rdaddress, buffer2_q, buffer2_wraddress, buffer2_wren, buffer2_data);
-    //     $display("rand_state: %d, buffer_cnt: %d, buffer_rdaddress_to_add:%d, read_buffer_end: %d", rand_state, buffer_counter, buffer_rdaddress_to_add, read_buffer_end);
+    //     $display("rand_state_mul_key_sig: %d, rand_state: %d, buffer_cnt: %d, buffer_rdaddress_to_add:%d, read_buffer_end: %d", rand_state_mul_key_sig, rand_state, buffer_counter, buffer_rdaddress_to_add, read_buffer_end);
     //     $write("pipe: \n");
     //     for (n = 0; n < N; n=n+1) begin
     //         $write("%x ", data_pipe[n*GF_BIT+:GF_BIT]);
     //     end
     //     $write("\n");
+    //     $display("sha3_state: %d", sha3_state);
+    //     $display("pk_cnt_end: %d, current_aes_state: %d, pk_cnt: %d", pk_cnt_end, current_aes_state, pk_cnt);
+    //     $display("sk_cnt: %d, sk_cnt_temp: %d, sk_cnt_end: %d", sk_cnt, sk_cnt_temp, sk_cnt_end);
     //     $display("transpose: data: %x, rd_en: %d, wr_en: %d, wr_addr: %d, rd_addr: %d", transpose_data, transpose_ren, transpose_wen, transpose_wraddress_w, transpose_rdaddress_w);
     //     $display("trans_bram_data: %x, trans_bram_wren: %d, trans_bram_wraddress: %d, trans_bram_rdaddress: %d", trans_bram_data, trans_bram_wren, trans_bram_wraddress, trans_bram_rdaddress);
     //     $display("gauss: %d %x", gauss_idx, sig_temp[gauss_idx]);
@@ -1983,16 +2067,15 @@ module uov #(
     //                        (op == MUL_O) ? "MUL_O" :
     //                        "others");
     //     $display("AES, init: %1b, next: %1b, ready: %1b, key=%x, block=%x, result=%x", aes_init, aes_next, aes_ready, aes_key, aes_ptext, aes_ctext);
-    //     $display("Dout: %x, %x", dataA_in, dataB_in);
     //     $display("din_dataB: %x, din_data: %x", din_dataB, din_data);
     //     $display("states: %d, proc_counter: %d, imm: %d, mispredict: %d", states, proc_counter, imm, mispredict);
     //     $display("(sha3_rst_n, ASmode, ready, we, address, start, data_in, data_out)=(%d %d %d %d %d %x %x, %x)", sha3_rst_n, sha3_ASmode, sha3_ready, sha3_we, sha3_address, sha3_start, sha3_data_in, sha3_data_out);
     //     $write("(%d, %x)\n", 0, buffer_out[127:0]);
     //     $write("(%d, %x)\n", 0, buffer_out[255:128]);
-    //     for (n = 0; n < 69; n=n+1) begin
-    //         $write("(%d, %x%x)\n", n, mem_buffer2.mem[n], mem_buffer1.mem[n]);
-    //     end
-    //     $write("\n");
+    //     // for (n = 0; n < 256; n=n+1) begin
+    //     //     $write("(%d, %x%x)\n", n, mem_buffer2.mem[n], mem_buffer1.mem[n]);
+    //     // end
+    //     // $write("\n");
     //     $display("T_mem: %d %d %d %x %x", T_mem_rd_addr, T_mem_wr_addr, T_mem_en, T_mem_din, T_mem_dout);
     //     $display("key_mem: %d %d", key_addr_r, key_en_r);
     //     $display("msg_cnt: %d, msg_word_cnt: %d", msg_cnt, msg_word_cnt);
@@ -2020,7 +2103,55 @@ module uov #(
     //         $write(" %x", sig_temp[n]);
     //     end
     //     $write("\n");
-
+    //     $write("[\n");
+    //     for (n = 0; n < 8; n=n+1) begin
+    //         $write("[");
+    //         for (m = 0; m < 2; m=m+1) begin
+    //             $write (" 0x%2x,", matrix_processor_inst.p_0_0.r_w[n][m]);
+    //         end
+    //         for (m = 0; m < 2; m=m+1) begin
+    //             $write (" 0x%2x,", matrix_processor_inst.p_0_1.r_w[n][m]);
+    //         end
+    //         for (m = 0; m < 2; m=m+1) begin
+    //             $write (" 0x%2x,", matrix_processor_inst.p_0_2.r_w[n][m]);
+    //         end
+    //         for (m = 0; m < 2; m=m+1) begin
+    //             $write (" 0x%2x,", matrix_processor_inst.p_0_3.r_w[n][m]);
+    //         end
+    //         for (m = 0; m < 2; m=m+1) begin
+    //             $write (" 0x%2x,", matrix_processor_inst.p_0_4.r_w[n][m]);
+    //         end
+    //         for (m = 0; m < 2; m=m+1) begin
+    //             $write (" 0x%2x,", matrix_processor_inst.p_0_5.r_w[n][m]);
+    //         end
+    //         $write("],");
+    //         $write("\n");
+    //     end
+    //     // $display("----------------------------------------------------------------------------");
+    //     for (n = 0; n < 8; n=n+1) begin
+    //         $write("[");
+    //         for (m = 0; m < 2; m=m+1) begin
+    //             $write (" 0x%2x,", matrix_processor_inst.p_1_0.r_w[n][m]);
+    //         end
+    //         for (m = 0; m < 2; m=m+1) begin
+    //             $write (" 0x%2x,", matrix_processor_inst.p_1_1.r_w[n][m]);
+    //         end
+    //         for (m = 0; m < 2; m=m+1) begin
+    //             $write (" 0x%2x,", matrix_processor_inst.p_1_2.r_w[n][m]);
+    //         end
+    //         for (m = 0; m < 2; m=m+1) begin
+    //             $write (" 0x%2x,", matrix_processor_inst.p_1_3.r_w[n][m]);
+    //         end
+    //         for (m = 0; m < 2; m=m+1) begin
+    //             $write (" 0x%2x,", matrix_processor_inst.p_1_4.r_w[n][m]);
+    //         end
+    //         for (m = 0; m < 2; m=m+1) begin
+    //             $write (" 0x%2x,", matrix_processor_inst.p_1_5.r_w[n][m]);
+    //         end
+    //         $write("],");
+    //         $write("\n");
+    //     end
+    //     $write("]\n");
     //     $display("sig_rand_r: %x", sig_rand_r);
     //     $display("Check %d ", check_fail);
     //     $display("Not the same");

@@ -16,12 +16,17 @@
 ## Folder structure
 
 ```
+├── test_files            // Hardware configuration files
 ├── Makefile              // Used for simulation
-├── gen_processor.py      // Use this python code to config and generate verilog codes
 ├── onboard               // Tickle files to generate the system
-├── scripts               // Scripts to simulate or sythesize
+├── scripts               // Scripts for simulation and sythesis
+│
+├── gen_processor.py      // Use this python code to config and generate verilog codes
 ├── simulator             // Python simulator providing behavior simulation
-└── test_files            // Configuration files
+├── rtl                   // Verilog codes
+├── gen_processor_v2.py   // Use this python code to config and generate verilog codes (v2)
+├── simulator_v2          // Python simulator providing behavior simulation (v2)
+└── rtl_v2                // Verilog codes (v2)
 ```
 
 ## Usage
@@ -29,7 +34,7 @@
 - RTL simulation (may take a while)
 
 ```
-python gen_processor.py test_files/one-round-aes/gauss-10round-aes/SL1-p/classic.cfg  // config for 1p classic with 1round AES
+python gen_processor.py test_files/one-round-aes/gauss-10round-aes/SL1-p/classic.cfg  // configuration for 1p classic with 1round AES
 ./scripts/csh_run_sim                                                                 // This script includes csh file to use vcs or ncverilog, modify it to the path your computer
 ```
 
@@ -48,8 +53,16 @@ vivado -mode tcl -source ./scripts/report.tcl -tclargs "test_files_one-round-aes
 
 ```
 python scripts/run_all_simulation.py test_files/one-round-aes/                     // Run simulation
-python scripts/run_all_synthesis.py test_files/one-round-aes/gauss-10round-aes/    // Run synthesis
+python scripts/run_all_synthesis.py test_files/one-round-aes/gauss-10round-aes/    // Run synthesis and generate xsa file
 ./scripts/hardware_result                                                          // Report all synthesized results
+```
+
+- Test version 2
+
+```
+python gen_processor_v2.py test_files/v2/1p-classic.cfg
+./scripts/csh_run_sim
+./scripts/run_synthesis
 ```
 
 ## Others

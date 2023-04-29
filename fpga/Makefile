@@ -3,10 +3,10 @@
 
 all: testbench
 
-DEFINE_IVERILOG := -I ./rtl/ -I ./rtl/sha3/ -DV=$(V) -DO=$(O) -DV_=$(V_) -DO_=$(O_) -DGF_BIT=$(GF_BIT) -DOP_SIZE=$(OP_SIZE) -DN=$N -DL=$L -DL_ORI=$(L_ORI) -DK=$K 
+DEFINE_IVERILOG := -I ./$(RTL_PATH)/ -I ./rtl/sha3/ -DV=$(V) -DO=$(O) -DV_=$(V_) -DO_=$(O_) -DGF_BIT=$(GF_BIT) -DOP_SIZE=$(OP_SIZE) -DN=$N -DL=$L -DL_ORI=$(L_ORI) -DK=$K 
 AFTER_COMPILE_IVERILOG := && ./a.out
 
-DEFINE := +incdir+rtl/ +incdir+rtl/sha3/ +define+V=$(V) +define+O=$(O) +define+V_=$(V_) +define+O_=$(O_) +define+GF_BIT=$(GF_BIT) +define+OP_SIZE=$(OP_SIZE) +define+N=$N +define+L=$L +define+L_ORI=$(L_ORI) +define+K=$K
+DEFINE := +incdir+$(RTL_PATH)/ +incdir+rtl/sha3/ +define+V=$(V) +define+O=$(O) +define+V_=$(V_) +define+O_=$(O_) +define+GF_BIT=$(GF_BIT) +define+OP_SIZE=$(OP_SIZE) +define+N=$N +define+L=$L +define+L_ORI=$(L_ORI) +define+K=$K
 AFTER_COMPILE := 
 
 ifneq (, $(shell which ncverilog))
@@ -24,7 +24,7 @@ else
 $(error "No ncverilog or vcs or iverilog in $(PATH)")
 endif
 
-SRC := ./rtl/*.v ./rtl/sha3/sha3_64.v ./rtl/sha3/keccak_round.v ./rtl/utils/rtl/*.v ./rtl/aes_ctr_rng/rtl/*.v
+SRC := ./$(RTL_PATH)/*.v ./rtl/sha3/sha3_64.v ./rtl/sha3/keccak_round.v ./rtl/utils/rtl/*.v ./rtl/aes_ctr_rng/rtl/*.v
 
 
 testbench: $(SRC)

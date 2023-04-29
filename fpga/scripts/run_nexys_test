@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [ $# -ne 1  ]; then
+    echo "Usage: \"./scripts/run_nexys_test <folder generated after running run_synthsis>\"";
+    exit
+fi
+
+xsct < <( printf %s '
+    connect
+    after 3000
+    targets -set -filter {jtag_cable_name =~ "Digilent Nexys Video 210276B3E270B" && level==0 && jtag_device_ctx=="jsn-Nexys Video-210276B3E270B-13636093-0"}
+    fpga -file '$1'/uov_test/_ide/bitstream/system0_wrapper.bit
+    targets -set -nocase -filter {name =~ "*microblaze*#0" && bscan=="USER2" }
+    loadhw -hw '$1'/system0_wrapper/export/system0_wrapper/hw/system0_wrapper.xsa -regs
+    configparams mdm-detect-bscan-mask 2
+    targets -set -nocase -filter {name =~ "*microblaze*#0" && bscan=="USER2" }
+    rst -system
+    after 3000
+    targets -set -nocase -filter {name =~ "*microblaze*#0" && bscan=="USER2" }
+    dow '$1'/uov_test/Debug/uov_test.elf
+    targets -set -nocase -filter {name =~ "*microblaze*#0" && bscan=="USER2" }
+    ' )

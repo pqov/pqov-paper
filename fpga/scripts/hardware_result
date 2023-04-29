@@ -8,8 +8,8 @@ if [ ! -d "./synthesis_output" ]; then
 fi
 
 one_round=( one-round-aes_gauss-10round-aes_SL1-p_classic one-round-aes_gauss-10round-aes_SL1-p_pkc one-round-aes_gauss-10round-aes_SL1-p_pkc_skc one-round-aes_gauss-10round-aes_SL1-s_classic one-round-aes_gauss-10round-aes_SL1-s_pkc one-round-aes_gauss-10round-aes_SL1-s_pkc_skc one-round-aes_gauss-10round-aes_SL3_pkc one-round-aes_gauss-10round-aes_SL3_pkc_skc one-round-aes_gauss-10round-aes_SL5_pkc_skc )
-ten_round=( pipelined-aes_gauss-10round-aes-pipe_SL1-p_pkc pipelined-aes_gauss-10round-aes-pipe_SL1-p_pkc_skc pipelined-aes_gauss-10round-aes-pipe_SL1-s_pkc pipelined-aes_gauss-10round-aes-pipe_SL1-s_pkc_skc pipelined-aes_gauss-10round-aes-pipe_SL3_pkc pipelined-aes_gauss-10round-aes-pipe_SL3_pkc_skc pipelined-aes_gauss-10round-aes-pipe_SL5_pkc_skc )
-four_round=( pipelined-aes_gauss-4round-aes-pipe_SL1-p_pkc pipelined-aes_gauss-4round-aes-pipe_SL1-p_pkc_skc pipelined-aes_gauss-4round-aes-pipe_SL1-s_pkc pipelined-aes_gauss-4round-aes-pipe_SL1-s_pkc_skc pipelined-aes_gauss-4round-aes-pipe_SL3_pkc pipelined-aes_gauss-4round-aes-pipe_SL3_pkc_skc pipelined-aes_gauss-4round-aes-pipe_SL5_pkc_skc )
+ten_round=( pipelined-aes_gauss-10round-aes-pipe_SL1-p_classic pipelined-aes_gauss-10round-aes-pipe_SL1-p_pkc pipelined-aes_gauss-10round-aes-pipe_SL1-p_pkc_skc pipelined-aes_gauss-10round-aes-pipe_SL1-s_classic pipelined-aes_gauss-10round-aes-pipe_SL1-s_pkc pipelined-aes_gauss-10round-aes-pipe_SL1-s_pkc_skc pipelined-aes_gauss-10round-aes-pipe_SL3_pkc pipelined-aes_gauss-10round-aes-pipe_SL3_pkc_skc pipelined-aes_gauss-10round-aes-pipe_SL5_pkc_skc )
+four_round=( pipelined-aes_gauss-4round-aes-pipe_SL1-p_classic pipelined-aes_gauss-4round-aes-pipe_SL1-p_pkc pipelined-aes_gauss-4round-aes-pipe_SL1-p_pkc_skc pipelined-aes_gauss-4round-aes-pipe_SL1-s_classic pipelined-aes_gauss-4round-aes-pipe_SL1-s_pkc pipelined-aes_gauss-4round-aes-pipe_SL1-s_pkc_skc pipelined-aes_gauss-4round-aes-pipe_SL3_pkc pipelined-aes_gauss-4round-aes-pipe_SL3_pkc_skc pipelined-aes_gauss-4round-aes-pipe_SL5_pkc_skc )
 
 for table in "${one_round[@]}" "${ten_round[@]}" "${four_round[@]}"
 do

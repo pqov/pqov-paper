@@ -332,30 +332,41 @@ def vrfy_codegen():
     aes_update_ctr(O*rand_state_num*buffer_multiplier//N)                   # Generate 8*imm bytes
     eval(P3)                                                                # (s^T P3 T) while waiting aes
     if not use_pipelined_aes:                                               #
-        stall(max((P1_stall-rand_state_num*10)*buffer_multiplier-(O*(O+1)//2), 0)) # Stall for AES or eval
+        stall(max((P1_stall-rand_state_num*O_)*buffer_multiplier+20-(O*(O+1)//2), 0)) # Stall for AES or eval
     
-    addi(r3, r0, 0)                                                         # r3 = 0
-    addi(r1, r0, 0)                                                         # _(Loop r1)______________
-    Vrfy_P1_1 = len(inst)                                                   #                         \
-    addi(r2, r1, 0)                                                         # _(Loop r2)____________   |
-    Vrfy_P1_2 = len(inst)                                                   #                       \  |
-    Here = len(inst) + 6                                                    #                        | |
-    bne(r3, r11, Here)                                                      # ____________________   | |
-    addi(r10, r10, O*rand_state_num*buffer_multiplier//N)                   # Increase r10        \  | |
-    aes_set_ctr(r0, r10, 0)                                                 # Set r10 to aes128ctr | | |
-    aes_update_ctr(O*rand_state_num*buffer_multiplier//N)                   # Generate 8*imm bytes | | |
-    if use_pipelined_aes:                                                   #                      | | |
-        stall(aes_round+3)                                                  # Stall for O bytes    | | |
-    else:                                                                   #                      | | |
-        stall(max((P1_stall-rand_state_num*10)*buffer_multiplier, 0))       # Stall for O bytes    | | |
-    addi(r3, r0, 0)                                                         # ____________________/  | |
-    mul_key_sig(P1, r1, r2)                                                 # (s^T P1[r1][r2] T)     | |
-    addi(r3, r3, 1)                                                         # r3++                   | |
-    addi(r2, r2, 1)                                                         # r2++                   | |
-    bne(r2, r14, Vrfy_P1_2)                                                 # ______________________/  |
-    addi(r1, r1, 1)                                                         # r1++                     |
-    bne(r1, r14, Vrfy_P1_1)                                                 # ________________________/
-
+    cur_row = 0
+    cur_col = 0
+    cnt     = 1
+    addi(r1, r0, 0)
+    addi(r2, r0, 0)
+    while True:
+        mul_key_sig(P1, r1, r2, rand_state_num*buffer_multiplier)
+        break_loop = False
+        for r in range(V):
+            if break_loop:
+                break
+            for c in range(r, V):
+                idx2 = ((V+V-(r-1))*r)//2 + (c-r)
+                idx1 = ((V+V-(cur_row-1))*cur_row)//2 + (cur_col-cur_row)
+                if (idx2 - idx1) == rand_state_num*buffer_multiplier:
+                    addi(r1, r0, r)
+                    addi(r2, r0, c)
+                    cur_row = r
+                    cur_col = c
+                    break_loop = True
+                    break
+        if not break_loop:
+            break
+        cnt += 1
+        addi(r10, r10, O*rand_state_num*buffer_multiplier//N)               # Increase r10        \  | |
+        aes_set_ctr(r0, r10, 0)                                             # Set r10 to aes128ctr | | |
+        aes_update_ctr(O*rand_state_num*buffer_multiplier//N)               # Generate 8*imm bytes | | |
+        if use_pipelined_aes:                                               #                      | | |
+            stall(aes_round+3)                                              # Stall for O bytes    | | |
+        else:                                                               #                      | | |
+            stall(max((P1_stall-rand_state_num*O_)*buffer_multiplier, 0)+20)# Stall for O bytes    | | |
+    stall((O*rand_state_num*buffer_multiplier*GF_bit*cnt - V*(V+1)//2*GF_bit*O)//128) # wait aes to finish                                                     # wait aes to finish
+    
     # Generate P2
     addi(r10, r0, P2_start_ctr)                                             # r10 = P2_start_ctr
     aes_set_ctr(r0, r10, 0)                                                 # aes128ctr = P2_start_ctr
@@ -366,17 +377,12 @@ def vrfy_codegen():
     if use_pipelined_aes:                                                   #
         stall(aes_round+3)                                                  # Stall (pipelined AES)
     else:                                                                   #
-        stall(max((P2_stall-rand_state_num*10)*(O//rand_state_num), 0))     # Stall (1 round AES)
+        stall(max(P2_stall*(O//rand_state_num)-O*O_+20, 0))                 # Stall (1 round AES)
     
-    addi(r3, r0, 0)                                                         # r3 = 0
     addi(r1, r0, 0)                                                         # _(Loop r1)______________
-    Vrfy_P2_1 = len(inst)                                                   #                         \
-    addi(r2, r0, 0)                                                         # _(Loop r2)____________   |
-    Vrfy_P2_2 = len(inst)                                                   #                       \  |
-    mul_key_sig(P2, r1, r2)                                                 # (s^T P2[r1][r2] T)     | |
-    addi(r3, r3, 1)                                                         # r3++                   | |
-    addi(r2, r2, 1)                                                         # r2++                   | |
-    bne(r2, r15, Vrfy_P2_2)                                                 # ______________________/  |
+    addi(r2, r0, 0)                                                         #                         \
+    Vrfy_P2_1 = len(inst)                                                   #                          |
+    mul_key_sig(P2, r1, r2, O)                                              # (s^T P2[r1][r2] T)       |
     addi(r10, r10, O*O//N)                                                  # Increase r10             |
     aes_set_ctr(r0, r10, 0)                                                 # Set r10 to aes128ctr     |
     if (O == 44):                                                           #                          |
@@ -386,7 +392,7 @@ def vrfy_codegen():
     if use_pipelined_aes:                                                   #                          |
         stall(aes_round+3)                                                  # Stall (pipelined AES)    |
     else:                                                                   #                          |
-        stall(max((P2_stall-rand_state_num*10)*(O//rand_state_num), 0))     # Stall (1 round AES)      |
+        stall(max(P2_stall*(O//rand_state_num)-O*O_+20, 0))                 # Stall (1 round AES)      |
     addi(r1, r1, 1)                                                         # r1++                     |
     bne(r1, r14, Vrfy_P2_1)                                                 # ________________________/
     

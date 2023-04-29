@@ -1,12 +1,7 @@
 `include "define.v"
 module processor_ABCD #(
     parameter GF_BIT  = 4,
-    parameter OP_CODE_LEN = 4,
-    parameter ROW_IDX = 0,
-    parameter COL_IDX = 1,
-    parameter TILE_ROW_IDX = 0,
-    parameter TILE_COL_IDX = 1,
-    parameter NUM_PROC_COL = 3
+    parameter OP_CODE_LEN = 4
 )(
     input  wire                   clk,
     input  wire                   start_in,
@@ -27,10 +22,6 @@ module processor_ABCD #(
     output reg       [GF_BIT-1:0] r,
     input  wire                   functionA
 );
-    reg [GF_BIT-1:0] rand_reg;
-    always @(posedge clk) begin
-        rand_reg <= (op_in == 7) ? dataB_in : rand_reg;
-    end
     
     reg [GF_BIT-1:0] r_rep;
 
@@ -59,7 +50,7 @@ module processor_ABCD #(
     // EVAL/CALC_LIN:  op_in = 0100, gauss_op_in = 11    -> 01
     // GAUSS (10):     op_in = 0001, gauss_op_in = 10    -> 10 // 00 don't care
     // GAUSS (others): op_in = 0001, gauss_op_in = 11/01 -> 11 
-    assign mul_b = (op_in == 6) ? rand_reg :
+    assign mul_b = (op_in == 6) ? dataA_in :
                    (op_in == 4) ? key_data :
                    (op_in == 1) ? (gauss_op_in[0] ? data_in : r) : dataA_in;
     generate
@@ -120,7 +111,7 @@ module processor_ABCD #(
                           ((data_in==0) ? 2'b00 : 
                           ((r_rep==0)   ? 2'b01 : 2'b10))));
     assign dataB_out = (op_in == 5) ? r_rep :
-                       (op_in == 7) ? rand_reg :
+                       (op_in == 6) ? dataB_in :
                        !functionA ? dataB_in :
                         (gauss_op_out == 2'b10 ? data_in : inv_out);
 

@@ -6,6 +6,11 @@
 // --------------
 // The testbench of the TRNG. This illustrates the usage of the TRNG.
 //
+// Author: Bo-Yuan Peng
+// Copyright (c) 2020,
+//     National Taiwan University and Academia Sinica, Taiwan.
+// All rights reserved.
+//
 // Redistribution and use in source and binary forms, with or
 // without modification, are permitted provided that the following
 // conditions are met:

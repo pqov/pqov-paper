@@ -393,12 +393,7 @@ module tile_{r_idx}_{c_idx}#(
                     verilog_module += """
     processor_{ab_type} #(
         .GF_BIT(GF_BIT),
-        .OP_CODE_LEN({op_code_len}),
-        .ROW_IDX({current_row}),
-        .COL_IDX({current_col}),
-        .TILE_ROW_IDX({tile_r_idx}),
-        .TILE_COL_IDX({tile_c_idx}),
-        .NUM_PROC_COL({num_proc_col})
+        .OP_CODE_LEN({op_code_len})
     ) AB_proc_{r_idx}_{c_idx} (
         .clk(clk),
         .start_in(start_in_w[{r_idx}][{c_idx}]),
@@ -433,12 +428,7 @@ module tile_{r_idx}_{c_idx}#(
                     verilog_module += """
     processor_{b_type} #(
         .GF_BIT(GF_BIT),
-        .OP_CODE_LEN({op_code_len}),
-        .ROW_IDX({current_row}),
-        .COL_IDX({current_col}),
-        .TILE_ROW_IDX({tile_r_idx}),
-        .TILE_COL_IDX({tile_c_idx}),
-        .NUM_PROC_COL({num_proc_col})
+        .OP_CODE_LEN({op_code_len})
     ) B_proc_{r_idx}_{c_idx} (
         .clk(clk),
         .start_in(start_in_w[{r_idx}][{c_idx}]),
@@ -833,6 +823,8 @@ with open("./rtl/uov.v", "r") as sources:
     lines = sources.readlines()
 with open("./rtl/uov.v", "w") as sources:
     for line in lines:
+        line = re.sub(r"SPACING = .*",
+                       "SPACING = " + str(col_layout[0]) + ";", line)
         line = re.sub(r"RIGHT_DELAY = .*",
                        "RIGHT_DELAY = " + str(len(right_delay_layout)-1) + ";", line)
         line = re.sub(r"UP_DELAY = .*",
@@ -902,6 +894,7 @@ with open("./scripts/run_synthesis", "w") as sources:
         line = re.sub(r"^V=.*", "V="+str(V), line)
         line = re.sub(r"^MODE=.*", "MODE=\""+mode+"\"", line)
         line = re.sub(r"^AES_ROUND=.*", "AES_ROUND="+str(aes_round), line)
+        line = re.sub(r"^RTL_PATH=.*", "RTL_PATH=\"rtl\"", line)
         sources.write(line)
 
 package_str = "# package start\n"
@@ -935,6 +928,7 @@ with open("./scripts/run_simulation", "w") as sources:
         line = re.sub(r"^V=.*", "V="+str(V), line)
         line = re.sub(r"^MODE=.*", "MODE=\""+mode+"\"", line)
         line = re.sub(r"^AES_ROUND=.*", "AES_ROUND="+str(aes_round), line)
+        line = re.sub(r"^RTL_PATH=.*", "RTL_PATH=\"rtl\"", line)
         sources.write(line)
 
 

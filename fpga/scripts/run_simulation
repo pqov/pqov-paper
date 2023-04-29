@@ -11,5 +11,6 @@ O_=$(python -c "from math import ceil; print(int(ceil(float($O)/float($N))))")
 KK=$(python -c "from math import ceil; print(2*($LL))")
 MODE="classic"
 AES_ROUND=10
+RTL_PATH="rtl"
 
-make -e GF_BIT=$((GF_BIT)) OP_SIZE=$((OP_SIZE)) V=$V O=$O V_=$V_ O_=$O_ N=$N L=$LL L_ORI=$O K=$KK testbench
+make -e RTL_PATH=$RTL_PATH GF_BIT=$((GF_BIT)) OP_SIZE=$((OP_SIZE)) V=$V O=$O V_=$V_ O_=$O_ N=$N L=$LL L_ORI=$O K=$KK testbench
