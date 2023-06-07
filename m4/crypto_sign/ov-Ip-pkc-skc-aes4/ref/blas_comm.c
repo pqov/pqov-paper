@@ -1,1 +1,0 @@
-../../ov-Ip-pkc-skc/ref/blas_comm.c
