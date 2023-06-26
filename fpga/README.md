@@ -35,7 +35,7 @@
 
 ```
 python gen_processor.py test_files/one-round-aes/gauss-10round-aes/SL1-p/classic.cfg  // configuration for 1p classic with 1round AES
-./scripts/csh_run_sim                                                                 // This script includes csh file to use vcs or ncverilog, modify it to the path your computer
+./scripts/csh_run_sim (./scripts/run_simulation if using iverilog)                    // This script includes csh file to use vcs or ncverilog, modify it to the path your computer
 ```
 
 - Vivado synthesis
