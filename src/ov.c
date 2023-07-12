@@ -41,7 +41,7 @@ int ov_sign( uint8_t * signature , const sk_t * sk , const uint8_t * message , u
     #endif
     uint8_t vinegar[_V_BYTE];
     uint8_t r_l1_F1[_O_BYTE] = {0};
-    uint8_t y[_PUB_N_BYTE];
+    uint8_t y[_PUB_M_BYTE];
     uint8_t x_o1[_O_BYTE];
 
 #if defined(_MUL_WITH_MULTAB_)
