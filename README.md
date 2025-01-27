@@ -1,6 +1,9 @@
 This repository contains the code accompanying the paper **Oil and Vinegar: Modern Parameters and
 Implementations** which is available [here](https://eprint.iacr.org/2023/059).
 
+If you are looking for the UOV NIST submission, you are in the wrong place.
+Up-to-date implementations of the UOV NIST submissions are available [here for reference code, x86, and Neon](https://github.com/pqov/pqov) and [here for Cortex-M4](https://github.com/pqov/pqov-m4).
+
 This repository contains OV implementations targeting x86 (with AVX2), Armv8 (with Neon), Arm Cortex-M4, and FPGA. 
 
 Authors: 
